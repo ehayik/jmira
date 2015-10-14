@@ -7,9 +7,9 @@ package org.eljaiek.jmira.app.view;
  */
 public final class Views {
 
-    public static final String HOME = "/org/eljaiek/jmira/view/Home.fxml";
+    public static final String HOME = "/org/eljaiek/jmira/app/view/Home.fxml";
     
-    public static final String EDIT_REPOSITORY = "/org/eljaiek/jmira/view/EditRepository.fxml";
+    public static final String EDIT_REPOSITORY = "/org/eljaiek/jmira/app/view/EditRepository.fxml";
     
     private Views() {
     }    

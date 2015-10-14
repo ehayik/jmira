@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.data.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
 

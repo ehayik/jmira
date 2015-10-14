@@ -11,11 +11,18 @@ import org.eljaiek.jmira.app.view.Views;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.util.Locale;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
 public class MainApp extends Application {
+        
+    private static ViewLoader VIEW_LOADER;
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = (Parent) ViewLoader.load(Views.HOME);
+        Parent root = (Parent) VIEW_LOADER.load(Views.HOME);
         Scene scene = new Scene(root);
         stage.setTitle("JMira 1.0");
         stage.setScene(scene);
@@ -31,8 +38,9 @@ public class MainApp extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        Locale.setDefault(Locale.ENGLISH);
         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        VIEW_LOADER = context.getBean(ViewLoader.class);
         launch(args);
     }
-
 }

@@ -1,12 +1,22 @@
 package org.eljaiek.jmira.app.view;
 
+import org.eljaiek.jmira.core.MessageResolver;
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import com.google.common.collect.Lists;
+import java.lang.reflect.InvocationTargetException;
 import javafx.fxml.FXMLLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 /**
  *
@@ -15,25 +25,116 @@ import org.springframework.stereotype.Component;
 @Component
 public final class ViewLoader implements ApplicationContextAware {
 
-    private static ApplicationContext CONTEXT;
+    private static final Logger LOG = LoggerFactory.getLogger(ViewLoader.class);
+
+    private ApplicationContext context;
+
+    private final Map<String, String> resources;
+
+    @Autowired
+    private MessageResolver messages;
+
+    public ViewLoader() {
+        resources = new HashMap<>();
+        resources.put(Views.EDIT_REPOSITORY, "org.eljaiek.jmira.app.view.resources.editRepository");
+        resources.put(Views.HOME, "org.eljaiek.jmira.app.view.resources.home");
+    }
 
     @Override
     public void setApplicationContext(ApplicationContext ac) throws BeansException {
-        CONTEXT = ac;
+        context = ac;
     }
 
-    public static final Object load(String url) {
+    public final Object load(String url) {
+        return load(url, null);
+    }
 
-        try (InputStream fxmlStream = ViewLoader.class.getResourceAsStream(url)) {
-            return loader().load(fxmlStream);
+    public final Object load(String url, Map<String, Object> bindings) {
+
+        try {
+            ResourceBundle resourceBundle = ResourceBundle.getBundle(resources.get(url));
+            FXMLLoader loader = new FXMLLoader(ViewLoader.class.getResource(url), resourceBundle);
+            loader.setControllerFactory(param -> context.getBean(param));
+            Object view = loader.load();
+
+            if (bindings != null) {
+                bindModel(bindings, loader.getController());
+            }
+
+            return view;
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new ViewLoadException(ex.getMessage(), ex);
         }
     }
 
-    private static FXMLLoader loader() {
-        FXMLLoader loader = new FXMLLoader();
-        loader.setControllerFactory(param -> CONTEXT.getBean(param));
-        return loader;
+    private <T> void bindModel(Map<String, Object> bindings, T controller) {
+
+        bindings.forEach((String key, Object value) -> {
+            boolean bonded;
+            Optional<Field> field = Lists.newArrayList(controller.getClass().getDeclaredFields())
+                    .stream()
+                    .filter(f -> {
+                        ViewModel vb = f.getAnnotation(ViewModel.class);
+                        return vb != null && vb.value().equals(key);
+                    })
+                    .findFirst();
+            
+            if (field.isPresent()) {
+                bindToField(field.get(), controller, value);
+                bonded = true;
+            } else {
+                bonded = bindToMethod(key, controller, value);
+            }
+
+            if (!bonded) {
+                LOG.warn(messages.getMessage("viewLoader.bindField.warn",
+                        controller.getClass().getCanonicalName(), key));
+            }
+        });
     }
+
+    private static <T> void bindToField(Field field, T controller, Object value) {
+
+        try {
+            field.setAccessible(true);
+            field.set(controller, value);
+            field.setAccessible(false);
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
+            throw new ViewLoadException(ex.getMessage(), ex);
+        }
+    }
+
+    private static <T> boolean bindToMethod(String key, T controller, Object value) {
+        boolean bonded = false;
+        Optional<Method> method = Lists.newArrayList(controller.getClass().getMethods())
+                .stream()
+                .filter(m -> {
+                    ViewModel vb = m.getAnnotation(ViewModel.class);
+                    return vb != null && vb.value().equals(key);
+                })
+                .findFirst();
+
+        if (method.isPresent()) {
+            try {    
+                method.get().invoke(controller, value);
+            } catch (IndexOutOfBoundsException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                throw new ViewLoadException(ex.getMessage(), ex);
+            }
+
+            bonded = true;
+        }
+
+        return bonded;
+    }
+
+//    private static Optional<Method> getWriteMethod(Class cl, String fieldname) {
+//        Method method = null;
+//
+//        try {
+//            method = new PropertyDescriptor(fieldname, cl).getWriteMethod();
+//        } catch (IntrospectionException ex) {
+//        }
+//
+//        return Optional.ofNullable(method);
+//    }
 }
