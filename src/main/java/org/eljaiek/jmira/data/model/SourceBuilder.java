@@ -1,5 +1,7 @@
 package org.eljaiek.jmira.data.model;
 
+import org.eljaiek.jmira.core.MessageResolver;
+
 /**
  *
  * @author eduardo.eljaiek
@@ -9,9 +11,9 @@ public final class SourceBuilder {
     private final Source source = new Source();
 
     private SourceBuilder() {
-    }    
+    }
 
-    public static final SourceBuilder build() {
+    public static final SourceBuilder create() {
         return new SourceBuilder();
     }
 
@@ -25,18 +27,26 @@ public final class SourceBuilder {
     }
 
     public SourceBuilder aptLine(String aptLine) {
-        int index = aptLine.lastIndexOf("/");
-        source.setUri(aptLine.substring(0, index));
-        String[] arr = aptLine.substring(index + 1, aptLine.length()).trim().split(" ");
-        source.setDistribution(arr[0]);
 
-        StringBuilder builder = new StringBuilder();
+        try {
+            String[] arr = aptLine.trim().split(" ");
 
-        for (int i = 1; i < arr.length; i++) {
-            builder.append(arr[i]).append(" ");
+            if (arr.length <= 1) {
+                throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("aptLine.error"));
+            }
+
+            source.setUri(arr[0]);
+            source.setDistribution(arr[1]);
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 2; i < arr.length; i++) {
+                builder.append(arr[i]).append(" ");
+            }
+
+            source.setComponents(builder.toString().trim());
+            return this;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("aptLine.error"));
         }
-
-        source.setComponents(builder.toString().trim());
-        return this;
     }
 }
