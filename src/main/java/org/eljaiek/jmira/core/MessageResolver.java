@@ -2,11 +2,13 @@ package org.eljaiek.jmira.core;
 
 import java.util.Locale;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.stereotype.Component;
 
 /**
  *
  * @author eduardo.eljaiek
  */
+@Component
 public final class MessageResolver {
 
     private final ResourceBundleMessageSource messageSource;
@@ -21,5 +23,9 @@ public final class MessageResolver {
 
     public String getMessage(String code) {
         return getMessage(code, new Object[]{});
+    }
+
+    public static MessageResolver getDefault() {
+        return ApplicationContextHolder.getContext().getBean(MessageResolver.class);
     }
 }

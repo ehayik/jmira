@@ -18,7 +18,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * @author eduardo.eljaiek
  */
 @Configuration
-@ComponentScan({"org.eljaiek.jmira.app", "org.eljaiek.jmira.core.impl", "org.eljaiek.jmira.data.repositories.impl"})
+@ComponentScan({"org.eljaiek.jmira.app", "org.eljaiek.jmira.core", "org.eljaiek.jmira.data.repositories.impl"})
 class AppConfig {
 
     @Bean
@@ -47,7 +47,10 @@ class AppConfig {
     @Bean
     public ResourceBundleMessageSource bundleMessageSource() {
         ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-        source.setBasenames("org/eljaiek/jmira/app/view/resources/viewLoader");
+        source.setBasenames("org/eljaiek/jmira/app/view/resources/viewLoader",
+                "org/eljaiek/jmira/app/view/resources/home",
+                "org/eljaiek/jmira/app/view/resources/editRepository",
+                "org/eljaiek/jmira/core/impl/resources/core");
         source.setFallbackToSystemLocale(false);
         return source;
     }

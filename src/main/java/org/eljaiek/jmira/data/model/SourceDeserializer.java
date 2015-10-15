@@ -18,7 +18,7 @@ public final class SourceDeserializer extends JsonDeserializer<Source> {
         JsonNode node = jp.getCodec().readTree(jp);
         boolean enabled = node.get("enabled").asBoolean();
         String aptLine = node.get("url").asText();
-        return SourceBuilder.build()
+        return SourceBuilder.create()
                 .enabled(enabled)
                 .aptLine(aptLine).get();
     }

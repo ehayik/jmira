@@ -13,7 +13,7 @@ public final class RepositoryBuilder {
     private RepositoryBuilder() {
     }    
     
-    public static final RepositoryBuilder build() {
+    public static final RepositoryBuilder create() {
         return new RepositoryBuilder();
     }
     
@@ -36,7 +36,7 @@ public final class RepositoryBuilder {
     public final RepositoryBuilder source(String source) {
         Assert.hasText(source);
         repository.getSources()
-                .add(SourceBuilder.build().aptLine(source).get());
+                .add(SourceBuilder.create().aptLine(source).get());
         return this;
     }
     
