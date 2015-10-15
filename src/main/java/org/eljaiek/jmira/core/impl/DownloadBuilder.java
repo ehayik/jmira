@@ -25,7 +25,7 @@ public final class DownloadBuilder {
     private DownloadBuilder() {
     }
     
-    public static final DownloadBuilder build() {
+    public static final DownloadBuilder create() {
         return new DownloadBuilder();
     }
     
