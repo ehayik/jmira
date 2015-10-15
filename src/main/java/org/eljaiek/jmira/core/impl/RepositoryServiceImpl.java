@@ -17,7 +17,9 @@ import static org.eljaiek.jmira.core.DebianNamesUtils.PACKAGES_BZ2;
 import static org.eljaiek.jmira.core.DebianNamesUtils.PACKAGES_GZ;
 import static org.eljaiek.jmira.core.DebianNamesUtils.RELEASE;
 import static org.eljaiek.jmira.core.DebianNamesUtils.RELEASE_GPG;
+import org.eljaiek.jmira.core.MessageResolver;
 import static org.eljaiek.jmira.core.NamesUtils.SETTINGS_JSON;
+import org.eljaiek.jmira.core.RepositoryAccessException;
 import org.eljaiek.jmira.data.model.Architecture;
 import org.eljaiek.jmira.data.model.Repository;
 import org.eljaiek.jmira.data.model.Source;
@@ -38,35 +40,38 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private MessageResolver messages;
 
     @Autowired
     private PackageRepository packages;
 
     @Override
-    public final void open(Repository reposiory) {
+    public final void open(Repository reposiory) throws RepositoryAccessException {
 
         try {
-            File home = new File(String.join(SLASH, reposiory.getHome(), SETTINGS_JSON));
-            //    packagesFile = new File(String.join("/", reposiory.getHome(), "packages.dat"));
+            File home = new File(String.join(SLASH, reposiory.getHome(), SETTINGS_JSON));         
+            
             if (!home.exists()) {
                 home.createNewFile();
             }
 
             objectMapper.writeValue(home, reposiory);
         } catch (IOException ex) {
-            throw new IllegalArgumentException(ex.getMessage(), ex);
+            throw new RepositoryAccessException(ex.getMessage(), ex);
         }
     }
 
     @Override
-    public final Repository open(String home) {
+    public final Repository open(String home) throws RepositoryAccessException {
 
         try {
             File homeFile = new File(String.join(SLASH, home, SETTINGS_JSON));
-            Assert.isTrue(homeFile.exists());
+            Assert.isTrue(homeFile.exists(), messages.getMessage("repository.homeError"));
             return objectMapper.readValue(homeFile, Repository.class);
         } catch (IOException ex) {
-            throw new IllegalArgumentException(ex.getMessage(), ex);
+            throw new RepositoryAccessException(ex.getMessage(), ex);
         }
     }
 
@@ -90,12 +95,12 @@ public class RepositoryServiceImpl implements RepositoryService {
         File folder = new File(String.join(SLASH, repository.getHome(), arr[arr.length - 1], DISTS_FOLDER));
         folder.mkdirs();
 
-        DownloadBuilder.build()
+        DownloadBuilder.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE))
                 .localFolder(folder.getAbsolutePath())
                 .get().run();
 
-        DownloadBuilder.build()
+        DownloadBuilder.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE_GPG))
                 .localFolder(folder.getAbsolutePath())
                 .get().run();
@@ -111,17 +116,17 @@ public class RepositoryServiceImpl implements RepositoryService {
         File local = new File(String.join(SLASH, folder.getAbsolutePath(), component, arch.getFolder()));
         local.mkdirs();
 
-        DownloadBuilder.build()
+        DownloadBuilder.create()
                 .url(String.join(SLASH, remote, RELEASE))
                 .localFolder(local.getAbsolutePath())
                 .get().run();
 
-        DownloadBuilder.build()
+        DownloadBuilder.create()
                 .url(String.join(SLASH, remote, PACKAGES_GZ))
                 .localFolder(local.getAbsolutePath())
                 .get().run();
 
-        DownloadBuilder.build()
+        DownloadBuilder.create()
                 .url(String.join(SLASH, remote, PACKAGES_BZ2))
                 .localFolder(local.getAbsolutePath())
                 .get().run();

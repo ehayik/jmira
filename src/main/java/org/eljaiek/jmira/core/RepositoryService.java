@@ -9,9 +9,9 @@ import org.eljaiek.jmira.data.model.Repository;
  */
 public interface RepositoryService {
 
-    void open(Repository reposiory);
+    void open(Repository reposiory) throws RepositoryAccessException;
     
-    Repository open(String home);
+    Repository open(String home) throws RepositoryAccessException;
 
     void synchronize(Repository repository, Function<Integer, Void> progress);    
 }
