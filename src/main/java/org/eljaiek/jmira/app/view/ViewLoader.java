@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 /**
  *
@@ -38,6 +37,7 @@ public final class ViewLoader implements ApplicationContextAware {
         resources = new HashMap<>();
         resources.put(Views.EDIT_REPOSITORY, "org.eljaiek.jmira.app.view.resources.editRepository");
         resources.put(Views.HOME, "org.eljaiek.jmira.app.view.resources.home");
+        resources.put(Views.EDIT_SOURCE, "org.eljaiek.jmira.app.view.resources.editSource");
     }
 
     @Override
@@ -126,15 +126,4 @@ public final class ViewLoader implements ApplicationContextAware {
 
         return bonded;
     }
-
-//    private static Optional<Method> getWriteMethod(Class cl, String fieldname) {
-//        Method method = null;
-//
-//        try {
-//            method = new PropertyDescriptor(fieldname, cl).getWriteMethod();
-//        } catch (IntrospectionException ex) {
-//        }
-//
-//        return Optional.ofNullable(method);
-//    }
 }
