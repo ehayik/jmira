@@ -6,7 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Function;
+import java.util.Optional;
+import java.util.function.LongConsumer;
 import org.apache.commons.io.IOUtils;
 import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.core.DownloadException;
@@ -25,6 +26,8 @@ import org.eljaiek.jmira.data.model.Repository;
 import org.eljaiek.jmira.data.model.Source;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.itadaki.bzip2.BZip2InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -36,11 +39,16 @@ import org.springframework.util.Assert;
 @Service
 public class RepositoryServiceImpl implements RepositoryService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RepositoryServiceImpl.class);
+
+    private static final LongConsumer DEF_CONSUMER = (long value) -> {
+    };
+
     private static final String SLASH = "/";
 
     @Autowired
     private ObjectMapper objectMapper;
-    
+
     @Autowired
     private MessageResolver messages;
 
@@ -51,8 +59,8 @@ public class RepositoryServiceImpl implements RepositoryService {
     public final void open(Repository reposiory) throws RepositoryAccessException {
 
         try {
-            File home = new File(String.join(SLASH, reposiory.getHome(), SETTINGS_JSON));         
-            
+            File home = new File(String.join(SLASH, reposiory.getHome(), SETTINGS_JSON));
+
             if (!home.exists()) {
                 home.createNewFile();
             }
@@ -76,15 +84,16 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public final void synchronize(Repository repository, Function<Integer, Void> progress) {
-        Assert.notNull(progress);
+    public final void synchronize(Repository repository, LongConsumer progress) {
+        Optional<LongConsumer> consumer = Optional.ofNullable(progress);
         Progress.total = repository.getSources().size();
         Progress.current = 0;
         repository.getSources().forEach(src -> {
 
             if (src.isEnabled()) {
                 syncronizeSrc(repository, src);
-                progress.apply(Progress.update());
+                int t = Progress.update();
+                consumer.orElse(DEF_CONSUMER).accept(t);
             }
         });
     }
@@ -92,7 +101,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     private void syncronizeSrc(Repository repository, Source source) {
         String[] arr = source.getUri().split(SLASH);
         String remoteFolder = String.join(SLASH, source.getUri(), DISTS_FOLDER, source.getDistribution());
-        File folder = new File(String.join(SLASH, repository.getHome(), arr[arr.length - 1], DISTS_FOLDER));
+        File folder = new File(String.join(SLASH, repository.getHome(), arr[arr.length - 1], DISTS_FOLDER, source.getDistribution()));
         folder.mkdirs();
 
         DownloadBuilder.create()
@@ -105,14 +114,15 @@ public class RepositoryServiceImpl implements RepositoryService {
                 .localFolder(folder.getAbsolutePath())
                 .get().run();
 
-        for (String component : source.getComponentsList()) {
+        for (String component : source.getComponentsList()) {           
             repository.getArchitectures()
                     .forEach(arch -> syncronizeComponent(remoteFolder, folder, component, arch));
         }
     }
 
-    private void syncronizeComponent(String remoteFolder, File folder, String component, Architecture arch) {
+    private void syncronizeComponent(String remoteFolder, File folder, String component, Architecture arch) {         
         String remote = String.join(SLASH, remoteFolder, component, arch.getFolder());
+        LOG.debug(messages.getMessage("log.sync.source",  remote));
         File local = new File(String.join(SLASH, folder.getAbsolutePath(), component, arch.getFolder()));
         local.mkdirs();
 
@@ -153,7 +163,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         private static int current;
 
         private static int update() {
-            return (total / ++current) * 100;
+            return (++current * 100) / total;
         }
     }
 }

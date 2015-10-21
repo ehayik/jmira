@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Observer;
 import org.eljaiek.jmira.core.Download;
 import org.eljaiek.jmira.core.DownloadAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 /**
@@ -15,6 +17,8 @@ import org.springframework.util.Assert;
  * @author eduardo.eljaiek
  */
 public final class DownloadBuilder {
+    
+     private static final Logger LOG = LoggerFactory.getLogger(DownloadBuilder.class);
 
     private URL url; 
     
@@ -33,8 +37,10 @@ public final class DownloadBuilder {
         try {
             this.url = new URL(url);
         } catch (MalformedURLException ex) {
+            LOG.error(ex.getMessage(), ex);
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
+        
         return this;
     }
     
@@ -53,7 +59,7 @@ public final class DownloadBuilder {
         Assert.hasText(localFolder);
         Download download;
         
-        if (url.getFile().startsWith("http")) {
+        if (url.toString().startsWith("http")) {
             download = new HttpDownload(localFolder, url);
         } else {
             download = new FileDownload(localFolder, url);

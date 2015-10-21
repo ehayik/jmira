@@ -8,12 +8,16 @@ import java.net.URL;
 import org.eljaiek.jmira.core.DownloadAdapter;
 import org.eljaiek.jmira.core.DownloadException;
 import org.eljaiek.jmira.core.DownloadStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author eduardo.eljaiek
  */
 final class HttpDownload extends DownloadAdapter {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(HttpDownload.class);
 
     // Max size of download buffer.
     private static final int MAX_BUFFER_SIZE = 1024;
@@ -57,6 +61,7 @@ final class HttpDownload extends DownloadAdapter {
             
         } catch (IOException ex) {
             error();
+            LOG.error(ex.getMessage(), ex);
             throw new DownloadException(ex.getMessage(), ex);
         }
     }
