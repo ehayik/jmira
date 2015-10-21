@@ -1,6 +1,6 @@
 package org.eljaiek.jmira.core;
 
-import java.util.function.Function;
+import java.util.function.LongConsumer;
 import org.eljaiek.jmira.data.model.Repository;
 
 /**
@@ -13,5 +13,5 @@ public interface RepositoryService {
     
     Repository open(String home) throws RepositoryAccessException;
 
-    void synchronize(Repository repository, Function<Integer, Void> progress);    
+    void synchronize(Repository repository, LongConsumer progress);    
 }
