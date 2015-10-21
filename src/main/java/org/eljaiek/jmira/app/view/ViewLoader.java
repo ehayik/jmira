@@ -1,12 +1,12 @@
 package org.eljaiek.jmira.app.view;
 
+import com.google.common.collect.Lists;
 import org.eljaiek.jmira.core.MessageResolver;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import com.google.common.collect.Lists;
 import java.lang.reflect.InvocationTargetException;
 import javafx.fxml.FXMLLoader;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ public final class ViewLoader implements ApplicationContextAware {
     private <T> void bindModel(Map<String, Object> bindings, T controller) {
 
         bindings.forEach((String key, Object value) -> {
-            boolean bonded;
+            boolean bonded; 
             Optional<Field> field = Lists.newArrayList(controller.getClass().getDeclaredFields())
                     .stream()
                     .filter(f -> {
