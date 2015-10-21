@@ -9,8 +9,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonSerialize(using = SourceSerializer.class)
 @JsonDeserialize(using = SourceDeserializer.class)
 public class Source {
-
-    private static final String DISTS_FOLDER = "dists";
     
     private boolean enabled = true;
 
@@ -21,10 +19,6 @@ public class Source {
     private String components;
 
     public Source() {
-    }
-
-    public Source(boolean enabled, String atpline) {
-        this.enabled = enabled;
     }
 
     public Source(boolean enabled, String uri, String distribution, String components) {
@@ -68,17 +62,13 @@ public class Source {
 
     public String getAtpline() {
         StringBuilder builder = new StringBuilder();
-        builder.append(uri).append("/ ").append(distribution);
+        builder.append(uri).append(" ").append(distribution);
         builder.append(" ").append(components);
         return builder.toString();
     }
 
-//    public String getDistFolder() {
-//        return String.join("/", DISTS_FOLDER, distribution);
-//    }
-    
     public String[] getComponentsList() {
-        return components.split(" ");       
+        return components.split(" ");
     }
 
     @Override
@@ -103,5 +93,5 @@ public class Source {
     @Override
     public String toString() {
         return getAtpline();
-    }  
+    }
 }

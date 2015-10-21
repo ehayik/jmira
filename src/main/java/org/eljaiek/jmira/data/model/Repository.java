@@ -15,7 +15,7 @@ public class Repository {
 
     private List<Architecture> architectures;
 
-    private final List<Source> sources;
+    private  List<Source> sources;
 
     public Repository() {
         sources = new ArrayList<>(4);
@@ -55,7 +55,11 @@ public class Repository {
 
     public List<Source> getSources() {
         return sources;
-    }    
+    }
+
+    public void setSources(List<Source> sources) {
+        this.sources = sources;
+    }
 
     @Override
     public String toString() {

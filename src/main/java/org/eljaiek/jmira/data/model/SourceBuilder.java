@@ -45,8 +45,8 @@ public final class SourceBuilder {
 
             source.setComponents(builder.toString().trim());
             return this;
-        } catch (Exception e) {
-            throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("aptLine.error"));
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("aptLine.error"), ex);
         }
     }
 }
