@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="42.0" prefWidth="334.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ImageView fx:id="imageView" fitHeight="47.0" fitWidth="38.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@resources/icons/package32.png" />
+         </image>
+         <HBox.margin>
+            <Insets left="2.0" top="2.0" />
+         </HBox.margin>
+      </ImageView>
+      <VBox prefHeight="39.0" prefWidth="291.0">
+         <children>
+            <Label fx:id="nameLabel" text="Label">
+               <VBox.margin>
+                  <Insets top="4.0" />
+               </VBox.margin>
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+            <Label fx:id="sizeLabel" text="Size:">
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+               <font>
+                  <Font size="13.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
+   </children>
+</HBox>

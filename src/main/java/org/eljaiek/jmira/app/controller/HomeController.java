@@ -5,21 +5,33 @@ import java.io.File;
 import org.eljaiek.jmira.app.model.RepositoryModel;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Function;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.util.Callback;
+import org.controlsfx.control.action.Action;
 import org.eljaiek.jmira.app.util.AlertHelper;
 import org.eljaiek.jmira.app.util.ModelMapperHelper;
 import org.eljaiek.jmira.app.view.ViewLoader;
@@ -27,9 +39,12 @@ import org.eljaiek.jmira.app.view.ViewMode;
 import org.eljaiek.jmira.app.view.Views;
 import org.eljaiek.jmira.core.MessageResolver;
 import org.eljaiek.jmira.core.NamesUtils;
+import org.eljaiek.jmira.core.PackageService;
 import org.eljaiek.jmira.core.RepositoryAccessException;
 import org.eljaiek.jmira.core.RepositoryService;
+import org.eljaiek.jmira.data.model.DebPackage;
 import org.eljaiek.jmira.data.model.Repository;
+import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.eljaiek.jmira.data.repositories.PackagesFileProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -43,7 +58,7 @@ import org.springframework.stereotype.Controller;
 public class HomeController implements Initializable, PackagesFileProvider, RepositoryProvider {
 
     private static final String TITLE_TMPL = "JMira 1.0 - %s";
-    
+
     @Autowired
     private ViewLoader viewLoader;
 
@@ -54,7 +69,13 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
     private RepositoryService repositories;
 
     @Autowired
+    private PackageService packages;
+
+    @Autowired
     private ServicePool servicePool;
+
+    @FXML
+    private ListView<DebPackage> packagesListView;
 
     private RepositoryModel current;
 
@@ -75,6 +96,9 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         disabled.set(true);
+        packagesListView.setCellFactory((ListView<DebPackage> param) -> {
+            return new PackageListCell();
+        });       
     }
 
     public BooleanProperty disabledProperty() {
@@ -92,14 +116,14 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
     @FXML
     final void newRepository(ActionEvent event) {
         RepositoryModel model = new RepositoryModel();
-        Window window = ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow();
+        Window window = ((Node) event.getTarget()).getScene().getWindow();
         showRepositoryView(messages.getMessage("repository.newDialog.title"), window, model, ViewMode.CREATE);
         ((Stage) window).setTitle(String.format(TITLE_TMPL, model.getName()));
     }
 
     @FXML
     final void openRepository(ActionEvent event) {
-        Window window = ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow();
+        Window window = ((Node) event.getTarget()).getScene().getWindow();
         DirectoryChooser chooser = new DirectoryChooser();
         File dir = chooser.showDialog(window);
 
@@ -109,6 +133,8 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
                 current = ModelMapperHelper.map(repo);
                 ((Stage) window).setTitle(String.format(TITLE_TMPL, repo.getName()));
                 disabled.set(false);
+                List<DebPackage> list = packages.list(1, 20);
+                packagesListView.setItems(FXCollections.observableArrayList(list));
             } catch (IllegalArgumentException | RepositoryAccessException ex) {
                 AlertHelper.error(window, messages.getMessage("repository.openError"), ex.getMessage(), ex);
             }
@@ -117,14 +143,28 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
 
     @FXML
     final void editRepository(ActionEvent event) {
-        Window window = ((MenuItem) event.getSource()).getParentPopup().getOwnerWindow();
+        Window window = ((Node) event.getTarget()).getScene().getWindow();
         showRepositoryView(current.getName(), window, new RepositoryModel(current), ViewMode.EDIT);
         ((Stage) window).setTitle(String.format(TITLE_TMPL, current.getName()));
     }
 
     @FXML
     final void syncronize(ActionEvent event) {
-        AlertHelper.progress(messages.getMessage("repository.sync.progressHeader"), messages.getMessage("repository.sync.progressContext", current.getName()), servicePool.getService("syncronizeService"));
+        Service service = servicePool.getService("syncronizeService");
+        service.setOnSucceeded(evt -> {
+            List<DebPackage> list = packages.list(1, 20);
+            packagesListView.setItems(FXCollections.observableArrayList(list));
+        });
+
+        AlertHelper.progress(messages.getMessage("repository.sync.progressHeader"),
+                messages.getMessage("repository.sync.progressContext", current.getName()),
+                servicePool.getService("syncronizeService"));
+
+    }
+
+    @FXML
+    final void exit(ActionEvent event) {
+        Platform.exit();
     }
 
     private void showRepositoryView(String title, Window owner, RepositoryModel model, ViewMode mode) {
