@@ -29,6 +29,7 @@ public class RepositoryModel {
         name.set("mirror");
         home.set(System.getProperty("user.home"));
         archs.set(FXCollections.observableArrayList(Architecture.AMD64));
+        sources.set(FXCollections.observableArrayList(new ArrayList<SourceModel>()));
     }
 
     public RepositoryModel(RepositoryModel model) {

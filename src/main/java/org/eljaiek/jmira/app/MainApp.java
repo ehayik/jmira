@@ -2,7 +2,6 @@ package org.eljaiek.jmira.app;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -12,7 +11,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.Locale;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component

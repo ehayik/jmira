@@ -14,15 +14,11 @@ import org.eljaiek.jmira.data.repositories.PackagesFileProvider;
 import org.eljaiek.jmira.data.model.DebPackage;
 import org.eljaiek.jmira.data.repositories.DataAccessException;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
 final class PackageRepositoryImpl implements PackageRepository {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PackageRepositoryImpl.class);
 
     @Autowired
     private PackagesFileProvider provider;

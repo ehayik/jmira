@@ -16,7 +16,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 
 import javafx.fxml.Initializable;
@@ -107,7 +106,7 @@ public class EditRepositoryController implements Initializable {
         validationSupport.registerValidator(nameTextField, true, Validator.createEmptyValidator(messages.getMessage("field.required")));
         validationSupport.registerValidator(homeTextField, true, (Control t, String value) -> {
             File f = new File(String.join("/", value, SETTINGS_JSON));
-            boolean condition = !f.exists();
+            boolean condition = f.exists();
             
             if (ViewMode.EDIT == viewMode) {
                String home = String.join("/", model.get().getHome(), SETTINGS_JSON);
@@ -116,7 +115,7 @@ public class EditRepositoryController implements Initializable {
                 } catch (IOException ex) {  
                   condition = false;  
                 }              
-            }
+            }           
            
             return ValidationResult.fromMessageIf(t, messages.getMessage("homeTextField.error"), Severity.ERROR, condition);
         });

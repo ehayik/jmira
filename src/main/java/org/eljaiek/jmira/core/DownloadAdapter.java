@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.core;
 
-import java.io.File;
 import java.net.URL;
 import java.util.Observable;
 
