@@ -6,8 +6,10 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import javax.xml.ws.WebServiceException;
+import org.eljaiek.jmira.core.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
 
 /**
@@ -17,8 +19,6 @@ import org.eljaiek.jmira.data.model.DebPackage;
 public final class PackageScanner implements Iterator<DebPackage>, Closeable {
 
     public static final String CHAR_SET = "UTF8";
-
-    //  public static final int REQUIRED_TAGS_COUNT = 5;
     
     private static final String PACKAGE_TAG = "Package";
 
@@ -30,13 +30,23 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
 
     private static final String SIZE_TAG = "Size";
 
-  //  private static final String DEPENDS_TAG = "Depends";
-
     private final Scanner scanner;
+    
+    private Optional<String> remoteHome = Optional.ofNullable(null);
+    
+    private Optional<String> localHome = Optional.ofNullable(null);
+    
+    private long dowloaded = 0;
 
     public PackageScanner(String packagesFile) throws FileNotFoundException {
         scanner = new Scanner(new File(packagesFile), CHAR_SET);
     }
+
+    public PackageScanner(String packagesFile, String localHome, String remoteHome) throws FileNotFoundException {
+        this(packagesFile);
+        this.localHome = Optional.of(localHome);
+        this.remoteHome = Optional.of(remoteHome);
+    }    
 
     @Override
     public boolean hasNext() {
@@ -94,9 +104,27 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
         List<DebPackage> packages = new ArrayList<>();
 
         while (hasNext()) {
-            packages.add(next());
+            DebPackage pkg = next();
+            
+            if (localHome.isPresent()) {
+                pkg.setLocalUrl(String.join("/", localHome.get(), pkg.getRelativeUrl()));                
+            }
+            
+            if (remoteHome.isPresent()) {
+                pkg.setRemoteUrl(String.join("/", remoteHome.get(), pkg.getRelativeUrl()));
+            }
+            
+            if (ValidationUtils.isValid(pkg.getLocalUrl(), null)) {
+                dowloaded += pkg.getSize();
+            }
+            
+            packages.add(pkg);
         }
 
         return packages;
+    }
+    
+    public long getDownloaded() {
+        return dowloaded;
     }
 }

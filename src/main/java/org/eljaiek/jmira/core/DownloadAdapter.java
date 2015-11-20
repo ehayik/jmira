@@ -2,13 +2,14 @@ package org.eljaiek.jmira.core;
 
 import java.net.URL;
 import java.util.Observable;
+import java.util.Observer;
 
 /**
  *
  * @author eduardo.eljaiek
  */
-public abstract class DownloadAdapter extends Observable implements Download {
-
+public abstract class DownloadAdapter extends Observable implements Download {    
+    
     private DownloadStatus status = DownloadStatus.DOWNLOADING;
 
     private int size = -1;
@@ -97,5 +98,10 @@ public abstract class DownloadAdapter extends Observable implements Download {
     protected void stateChanged() {
         setChanged();
         notifyObservers();
+    }
+    
+    @Override
+    public void register(Observer observer) {
+        addObserver(observer);
     }
 }

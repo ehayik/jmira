@@ -13,5 +13,5 @@ public interface RepositoryService {
     
     Repository open(String home) throws RepositoryAccessException;
 
-    void synchronize(Repository repository, LongConsumer progress);    
+    long synchronize(Repository repository, LongConsumer progress);   
 }
