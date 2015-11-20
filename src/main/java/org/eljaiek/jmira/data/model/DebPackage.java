@@ -21,6 +21,8 @@ public class DebPackage implements Serializable {
     private long size;
     
     private String localUrl;
+    
+    private String remoteUrl;
 
     public DebPackage() {
     }
@@ -79,6 +81,14 @@ public class DebPackage implements Serializable {
 
     public void setLocalUrl(String localUrl) {
         this.localUrl = localUrl;
+    }   
+
+    public String getRemoteUrl() {
+        return remoteUrl;
+    }
+
+    public void setRemoteUrl(String remoteUrl) {
+        this.remoteUrl = remoteUrl;
     }   
 
     @Override

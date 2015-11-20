@@ -14,7 +14,9 @@ public interface PackageRepository {
     
     List<DebPackage> findAll(int start, int limit);
     
-    List<DebPackage> findAll(int limit);
+    List<DebPackage> findNotDownByLimit(int limit);
+
+    void removeAll();
     
     int count();
     
