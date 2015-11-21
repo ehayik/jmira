@@ -110,6 +110,7 @@ public class EditRepositoryController implements Initializable {
             
             if (ViewMode.EDIT == viewMode) {
                String home = String.join("/", model.get().getHome(), SETTINGS_JSON);
+
                try {
                   condition = f.exists() && !Files.isSameFile(f.toPath(), new File(home).toPath());
                 } catch (IOException ex) {  

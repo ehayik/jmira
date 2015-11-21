@@ -15,7 +15,7 @@ import org.controlsfx.validation.ValidationResult;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 import org.eljaiek.jmira.app.model.SourceModel;
-import org.eljaiek.jmira.app.util.ValidationHelper;
+import org.eljaiek.jmira.core.util.ValidationUtils;
 import org.eljaiek.jmira.app.view.ViewModel;
 import org.eljaiek.jmira.core.MessageResolver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +57,7 @@ public class EditSourceController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         validationSupport.registerValidator(uriTextField, true, (Control t, String value) -> {
-            boolean isValid = ValidationHelper.isValidUrl(value);
+            boolean isValid = ValidationUtils.isValidUrl(value);
             return ValidationResult.fromMessageIf(t, messages.getMessage("urlTextField.error"), Severity.ERROR, !isValid);
         });
         validationSupport.registerValidator(distsTextField, true, Validator.createEmptyValidator(messages.getMessage("field.required")));
