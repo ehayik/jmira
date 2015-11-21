@@ -3,10 +3,8 @@ package org.eljaiek.jmira.app.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.eljaiek.jmira.data.model.Architecture;
@@ -20,6 +18,10 @@ public class RepositoryModel {
     private final StringProperty name = new SimpleStringProperty();
 
     private final StringProperty home = new SimpleStringProperty();
+
+    private final LongProperty downloaded = new SimpleLongProperty(0);
+
+    private final LongProperty size = new SimpleLongProperty(0);
 
     private final ListProperty<Architecture> archs = new SimpleListProperty<>(FXCollections.emptyObservableList());
 
@@ -70,6 +72,30 @@ public class RepositoryModel {
 
     public StringProperty homeProperty() {
         return home;
+    }
+
+    public long getDownloaded() {
+        return downloaded.get();
+    }
+
+    public LongProperty downloadedProperty() {
+        return downloaded;
+    }
+
+    public void setDownloaded(long downloaded) {
+        this.downloaded.set(downloaded);
+    }
+
+    public long getSize() {
+        return size.get();
+    }
+
+    public LongProperty sizeProperty() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size.set(size);
     }
 
     public void setArchitectures(ObservableList<Architecture> value) {
