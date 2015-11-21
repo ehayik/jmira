@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-
 import java.lang.reflect.InvocationTargetException;
 import javafx.fxml.FXMLLoader;
 import org.slf4j.Logger;
@@ -15,13 +14,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
 
 /**
  *
  * @author eduardo.eljaiek
  */
-@Component
 public final class ViewLoader implements ApplicationContextAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(ViewLoader.class);
@@ -33,11 +30,8 @@ public final class ViewLoader implements ApplicationContextAware {
     @Autowired
     private MessageResolver messages;
 
-    public ViewLoader() {
-        resources = new HashMap<>();
-        resources.put(Views.EDIT_REPOSITORY, "org.eljaiek.jmira.app.view.resources.editRepository");
-        resources.put(Views.HOME, "org.eljaiek.jmira.app.view.resources.home");
-        resources.put(Views.EDIT_SOURCE, "org.eljaiek.jmira.app.view.resources.editSource");
+    public ViewLoader(Map<String, String> resources) {
+       this.resources = resources;
     }
 
     @Override
