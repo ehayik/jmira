@@ -3,7 +3,15 @@ package org.eljaiek.jmira.app;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.PostConstruct;
+import org.eljaiek.jmira.app.view.ViewLoader;
+import org.eljaiek.jmira.app.view.Views;
+import org.eljaiek.jmira.core.DownloadBuilder;
 import org.eljaiek.jmira.core.MessageResolver;
+import org.eljaiek.jmira.core.impl.FileDownloadResolver;
+import org.eljaiek.jmira.core.impl.HttpDownloadResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -14,10 +22,25 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * @author eduardo.eljaiek
  */
 @Configuration
-@ComponentScan({"org.eljaiek.jmira.app", 
-    "org.eljaiek.jmira.core", 
+@ComponentScan({"org.eljaiek.jmira.app",
+    "org.eljaiek.jmira.core",
     "org.eljaiek.jmira.data.repositories.impl"})
 class AppConfig {
+
+    @PostConstruct
+    public void registerDownloadResolvers() {
+        DownloadBuilder.register("http", new HttpDownloadResolver());
+        DownloadBuilder.register("file", new FileDownloadResolver());
+    }
+
+    @Bean
+    public ViewLoader viewLoader() {
+        Map<String, String> resources = new HashMap<>(3);
+        resources.put(Views.EDIT_REPOSITORY, "org.eljaiek.jmira.app.view.resources.editRepository");
+        resources.put(Views.HOME, "org.eljaiek.jmira.app.view.resources.home");
+        resources.put(Views.EDIT_SOURCE, "org.eljaiek.jmira.app.view.resources.editSource");
+        return new ViewLoader(resources);
+    }
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -35,7 +58,8 @@ class AppConfig {
                 "org/eljaiek/jmira/app/view/resources/editRepository",
                 "org/eljaiek/jmira/app/view/resources/editSource",
                 "org/eljaiek/jmira/app/view/resources/common",
-                "org/eljaiek/jmira/core/impl/resources/core");
+                "org/eljaiek/jmira/core/impl/resources/core",
+                "org/eljaiek/jmira/core/resources/core");
         source.setFallbackToSystemLocale(false);
         return source;
     }
