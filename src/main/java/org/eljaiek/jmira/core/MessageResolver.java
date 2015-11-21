@@ -2,19 +2,21 @@ package org.eljaiek.jmira.core;
 
 import java.util.Locale;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.stereotype.Component;
 
 /**
  *
  * @author eduardo.eljaiek
  */
-@Component
 public final class MessageResolver {
 
     private final ResourceBundleMessageSource messageSource;
 
     public MessageResolver(ResourceBundleMessageSource messageSource) {
         this.messageSource = messageSource;
+
+        if (MessageResolverHolder.DEFAULT == null) {
+            MessageResolverHolder.DEFAULT = MessageResolver.this;
+        }
     }
 
     public String getMessage(String code, Object... args) {
@@ -26,6 +28,11 @@ public final class MessageResolver {
     }
 
     public static MessageResolver getDefault() {
-        return ApplicationContextHolder.getContext().getBean(MessageResolver.class);
+        return MessageResolverHolder.DEFAULT;
+    }
+
+    private static class MessageResolverHolder {
+
+        private static MessageResolver DEFAULT = null;
     }
 }

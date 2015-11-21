@@ -11,4 +11,11 @@ import org.eljaiek.jmira.data.model.DebPackage;
 public interface PackageService {
     
     List<DebPackage> list(int start, int limit);
+    
+    long size();
+    
+    long downloaded();   
+    
+    List<DebPackage> getNotDownPack(int packSize);
+
 }
