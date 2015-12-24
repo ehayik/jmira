@@ -20,7 +20,7 @@ import org.springframework.util.Assert;
  * @author eduardo.eljaiek
  */
 @Service
-public class RepositoryServiceImpl implements RepositoryService {
+public final class RepositoryServiceImpl implements RepositoryService {
 
     private static final LongConsumer DEF_CONSUMER = (long value) -> {
     };
@@ -71,19 +71,17 @@ public class RepositoryServiceImpl implements RepositoryService {
         List<SourcesHelper.SourceFiles> sfs = SourcesHelper.download(repository);
         packages.removeAll();
 
-        sfs.forEach(sf -> {
-            sf.stream().forEach(f -> {
-                String locaHome = String.join("/", repository.getHome(), sf.getFolderName());
+        sfs.forEach(sf -> sf.stream().forEach(f -> {
+            String locaHome = String.join("/", repository.getHome(), sf.getFolderName());
 
-                try (PackageScanner scanner = new PackageScanner(f, locaHome, sf.getUrl())) {
-                    packages.saveAll(scanner.list());
-                    Progress.downloaded += scanner.getDownloaded();
-                    consumer.orElse(DEF_CONSUMER).accept(Progress.update());
-                } catch (FileNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                }
-            });
-        });
+            try (PackageScanner scanner = new PackageScanner(f, locaHome, sf.getUrl())) {
+                packages.saveAll(scanner.list());
+                Progress.downloaded += scanner.getDownloaded();
+                consumer.orElse(DEF_CONSUMER).accept(Progress.update());
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+        }));
 
         return Progress.downloaded;
     }

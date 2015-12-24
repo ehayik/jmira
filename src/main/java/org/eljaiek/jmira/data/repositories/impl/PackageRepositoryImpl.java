@@ -30,7 +30,7 @@ final class PackageRepositoryImpl implements PackageRepository {
     @Override
     public void saveAll(List<DebPackage> packages) {
         Assert.isTrue(provider.getFile().isPresent());
-        
+
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "rw")) {
             int count = packages.size();
             long size = packages.stream()
@@ -60,7 +60,8 @@ final class PackageRepositoryImpl implements PackageRepository {
 
     @Override
     public List<DebPackage> findAll(int start, int limit) {
-        Assert.isTrue(provider.getFile().isPresent());
+        Assert.isTrue(provider.getFile().isPresent());     
+        Assert.isTrue(start > 0 && limit > 0 && limit > start);
         
         if (!provider.getFile().get().exists()) {
             return Lists.newArrayList();
@@ -97,7 +98,7 @@ final class PackageRepositoryImpl implements PackageRepository {
     @Override
     public final int count() {
         Assert.isTrue(provider.getFile().isPresent());
-        
+
         if (!provider.getFile().get().exists()) {
             return 0;
         }
@@ -112,7 +113,7 @@ final class PackageRepositoryImpl implements PackageRepository {
     @Override
     public final long size() {
         Assert.isTrue(provider.getFile().isPresent());
-        
+
         if (!provider.getFile().get().exists()) {
             return 0;
         }
@@ -128,7 +129,7 @@ final class PackageRepositoryImpl implements PackageRepository {
     @Override
     public final long downloaded() {
         Assert.isTrue(provider.getFile().isPresent());
-        
+
         if (!provider.getFile().get().exists()) {
             return 0;
         }
@@ -153,33 +154,31 @@ final class PackageRepositoryImpl implements PackageRepository {
         } catch (IOException | ClassNotFoundException ex) {
             throw new DataAccessException(ex.getMessage(), ex);
         }
-
     }
 
     @Override
-    public List<DebPackage> findNotDownByLimit(int limit) {
+    public List<DebPackage> findNotDownloaded() {
         Assert.isTrue(provider.getFile().isPresent());
-        
+
         if (!provider.getFile().get().exists()) {
             return Lists.newArrayList();
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
-            List<DebPackage> result = new ArrayList<>(limit);
-            int size = 0;
+            int count = raf.readInt();
+            List<DebPackage> result = new ArrayList<>(0);
+            raf.readLong();
 
-            while (raf.getFilePointer() != raf.length() && size != limit) {
+            while (raf.getFilePointer() != raf.length()) {
                 int length = raf.readInt();
                 byte b[] = new byte[length];
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
                 File file = new File(pkg.getLocalUrl());
 
-                if (file.exists() && pkg.getSize() == file.length()) {
+                if (!file.exists() || pkg.getSize() != file.length()) {
                     result.add(pkg);
-                    size++;
                 }
-
             }
 
             return result;
@@ -194,7 +193,7 @@ final class PackageRepositoryImpl implements PackageRepository {
         provider.getFile().get().delete();
     }
 
-    private static void save(RandomAccessFile raf, DebPackage pkg) throws IOException {        
+    private static void save(RandomAccessFile raf, DebPackage pkg) throws IOException {
         byte[] b = toBytes(pkg);
         raf.writeInt(b.length);
         raf.write(b);

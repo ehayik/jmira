@@ -1,5 +1,9 @@
 package org.eljaiek.jmira.core;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Observable;
 import java.util.Observer;
@@ -8,7 +12,9 @@ import java.util.Observer;
  *
  * @author eduardo.eljaiek
  */
-public abstract class DownloadAdapter extends Observable implements Download {    
+public abstract class DownloadAdapter extends Observable implements Download {
+
+    private static final int MAX_BUFFER_SIZE = 1024;
     
     private DownloadStatus status = DownloadStatus.DOWNLOADING;
 
@@ -80,7 +86,13 @@ public abstract class DownloadAdapter extends Observable implements Download {
         this.url = url;
     }
 
-    protected String getLocalUrl() {       
+    protected String getLocalUrl() {
+        File folder = new File(localFolder);
+
+        if(!folder.exists()) {
+            folder.mkdirs();
+        }
+
         String fileName = url.getFile();
         return String.join("/", localFolder, fileName.substring(fileName.lastIndexOf('/') + 1));
     }
@@ -98,6 +110,40 @@ public abstract class DownloadAdapter extends Observable implements Download {
     protected void stateChanged() {
         setChanged();
         notifyObservers();
+    }
+
+    protected void write(RandomAccessFile file, InputStream stream) throws IOException {
+
+        while (getStatus() == DownloadStatus.DOWNLOADING) {
+            /* Size buffer according to how much of the
+             file is left to download. */
+            byte buffer[];
+
+            if (getSize() - getDownloaded() > MAX_BUFFER_SIZE) {
+                buffer = new byte[MAX_BUFFER_SIZE];
+            } else {
+                buffer = new byte[getSize() - getDownloaded()];
+            }
+
+            // Read from server into buffer.
+            int read = stream.read(buffer);
+
+            if (read <= 0) {
+                break;
+            }
+
+            // Write buffer to file.
+            file.write(buffer, 0, read);
+            setDownloaded(getDownloaded() + read);
+            stateChanged();
+        }
+
+        /* Change status to complete if this point was
+         reached because downloading has finished. */
+        if (getStatus() == DownloadStatus.DOWNLOADING) {
+            setStatus(DownloadStatus.COMPLETE);
+            stateChanged();
+        }
     }
     
     @Override

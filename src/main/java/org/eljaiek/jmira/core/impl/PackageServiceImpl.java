@@ -32,8 +32,7 @@ public class PackageServiceImpl implements PackageService {
     }
 
     @Override
-    public List<DebPackage> getNotDownPack(int packSize) {
-        Assert.isTrue(packSize > 0);
-        return packages.findNotDownByLimit(packSize);
+    public List<DebPackage> listNotDownloaded() {
+        return packages.findNotDownloaded();
     }
 }

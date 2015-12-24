@@ -3,11 +3,7 @@ package org.eljaiek.jmira.core;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import javax.xml.ws.WebServiceException;
 import org.eljaiek.jmira.core.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
@@ -89,7 +85,11 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
                 break;
             }
 
-            line = scanner.nextLine();
+            try {
+                line = scanner.nextLine();
+            } catch (NoSuchElementException ex) {
+                line = "";
+            }
         }
 
         return pkg;

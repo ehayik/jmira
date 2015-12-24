@@ -7,7 +7,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import org.eljaiek.jmira.core.DownloadAdapter;
 import org.eljaiek.jmira.core.DownloadException;
-import org.eljaiek.jmira.core.DownloadStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +18,6 @@ final class HttpDownload extends DownloadAdapter {
     
     private static final Logger LOG = LoggerFactory.getLogger(HttpDownload.class);
 
-    // Max size of download buffer.
-    private static final int MAX_BUFFER_SIZE = 1024;
-    
     public HttpDownload(String localFolder, URL url) {
         super(localFolder, url);
     }    
@@ -61,42 +57,7 @@ final class HttpDownload extends DownloadAdapter {
             
         } catch (IOException ex) {
             error();
-            LOG.error(ex.getMessage(), ex);
             throw new DownloadException(ex.getMessage(), ex);
-        }
-    }
-    
-    private void write(RandomAccessFile file, InputStream stream) throws IOException {
-        
-        while (getStatus() == DownloadStatus.DOWNLOADING) {
-            /* Size buffer according to how much of the
-             file is left to download. */
-            byte buffer[];
-            
-            if (getSize() - getDownloaded() > MAX_BUFFER_SIZE) {
-                buffer = new byte[MAX_BUFFER_SIZE];
-            } else {
-                buffer = new byte[getSize() - getDownloaded()];
-            }
-
-            // Read from server into buffer.
-            int read = stream.read(buffer);
-            
-            if (read == -1) {
-                break;
-            }
-
-            // Write buffer to file.
-            file.write(buffer, 0, read);
-            setDownloaded(getDownloaded() + read);            
-            stateChanged();
-        }
-
-        /* Change status to complete if this point was
-         reached because downloading has finished. */
-        if (getStatus() == DownloadStatus.DOWNLOADING) {
-            setStatus(DownloadStatus.COMPLETE);
-            stateChanged();
         }
     }
 }

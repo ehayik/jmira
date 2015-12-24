@@ -16,6 +16,5 @@ public interface PackageService {
     
     long downloaded();   
     
-    List<DebPackage> getNotDownPack(int packSize);
-
+    List<DebPackage> listNotDownloaded();
 }
