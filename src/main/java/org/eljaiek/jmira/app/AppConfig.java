@@ -30,7 +30,7 @@ class AppConfig {
     @PostConstruct
     public void registerDownloadResolvers() {
         DownloadBuilder.register("http", new HttpDownloadResolver());
-        DownloadBuilder.register("file", new FileDownloadResolver());
+        DownloadBuilder.register("file", new FileDownloadResolver());        
     }
 
     @Bean
@@ -59,7 +59,8 @@ class AppConfig {
                 "org/eljaiek/jmira/app/view/resources/editSource",
                 "org/eljaiek/jmira/app/view/resources/common",
                 "org/eljaiek/jmira/core/impl/resources/core",
-                "org/eljaiek/jmira/core/resources/core");
+                "org/eljaiek/jmira/core/resources/core",
+                "org/eljaiek/jmira/app/view/resources/downloadScheduler");
         source.setFallbackToSystemLocale(false);
         return source;
     }

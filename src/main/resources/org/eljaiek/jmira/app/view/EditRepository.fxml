@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import org.controlsfx.control.*?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
+<?import org.controlsfx.control.CheckComboBox?>
 <BorderPane id="BorderPane" prefHeight="240.0" prefWidth="489.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.eljaiek.jmira.app.controller.EditRepositoryController">
     <center>
         <TabPane prefHeight="283.0" prefWidth="472.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">

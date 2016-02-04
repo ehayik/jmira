@@ -145,7 +145,7 @@ final class PackageRepositoryImpl implements PackageRepository {
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
-                if (ValidationUtils.isValid(pkg.getLocalUrl(), null)) {
+                if (ValidationUtils.isValidFile(pkg.getLocalUrl(), null)) {
                     downloaded += pkg.getSize();
                 }
             }

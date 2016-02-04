@@ -5,10 +5,9 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Optional;
 import org.eljaiek.jmira.core.DownloadAdapter;
 import org.eljaiek.jmira.core.DownloadException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -16,10 +15,8 @@ import org.slf4j.LoggerFactory;
  */
 final class HttpDownload extends DownloadAdapter {
     
-    private static final Logger LOG = LoggerFactory.getLogger(HttpDownload.class);
-
-    public HttpDownload(String localFolder, URL url) {
-        super(localFolder, url);
+    public HttpDownload(String localFolder, URL url, Optional<String> checksum) {
+        super(localFolder, url, checksum);
     }    
     
     @Override

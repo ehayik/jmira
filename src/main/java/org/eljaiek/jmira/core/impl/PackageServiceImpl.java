@@ -35,4 +35,9 @@ public class PackageServiceImpl implements PackageService {
     public List<DebPackage> listNotDownloaded() {
         return packages.findNotDownloaded();
     }
+
+    @Override
+    public int count() {
+       return packages.count();
+    }
 }

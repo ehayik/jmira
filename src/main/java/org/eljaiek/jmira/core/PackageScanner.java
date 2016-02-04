@@ -25,6 +25,8 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
     private static final String VERSION_TAG = "Version";
 
     private static final String SIZE_TAG = "Size";
+    
+    private static final String CHECKSUM_TAG = "MD5sum";
 
     private final Scanner scanner;
     
@@ -83,6 +85,11 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
                     pkg.setDescription(line.split(": ")[1]);
                 }
                 break;
+                
+                case CHECKSUM_TAG: {
+                    pkg.setChecksum(line.split(": ")[1]);
+                }
+                break;
             }
 
             try {
@@ -114,7 +121,7 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
                 pkg.setRemoteUrl(String.join("/", remoteHome.get(), pkg.getRelativeUrl()));
             }
             
-            if (ValidationUtils.isValid(pkg.getLocalUrl(), null)) {
+            if (ValidationUtils.isValidFile(pkg.getLocalUrl(), null)) {
                 dowloaded += pkg.getSize();
             }
             

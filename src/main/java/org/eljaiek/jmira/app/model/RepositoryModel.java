@@ -8,6 +8,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.eljaiek.jmira.data.model.Architecture;
+import org.eljaiek.jmira.data.model.Repository;
 
 /**
  *
@@ -122,5 +123,32 @@ public class RepositoryModel {
 
     public ListProperty sourcesProperty() {
         return sources;
+    }
+
+    public Repository getRepository() {
+        Repository to = new Repository();
+        to.setName(getName());
+        to.setHome(getHome());
+        to.setArchitectures(getArchitectures().stream().collect(Collectors.toList()));
+        to.setSources(getSources().stream().map(src -> src.getSource()).collect(Collectors.toList()));
+        return to;
+    }
+    
+    public static RepositoryModel create(Repository repository) {
+        RepositoryModel model = new RepositoryModel();
+            model.setName(repository.getName());
+            model.setHome(repository.getHome());
+            model.setArchitectures(FXCollections
+                    .observableArrayList(repository
+                            .getArchitectures()
+                            .stream()
+                            .collect(Collectors.toList())));
+            model.setSources(FXCollections
+                    .observableArrayList(repository
+                            .getSources()
+                            .stream()
+                            .map(SourceModel::create)
+                            .collect(Collectors.toList())));            
+            return model;
     }
 }

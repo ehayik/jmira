@@ -2,6 +2,7 @@ package org.eljaiek.jmira.core.impl;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Optional;
 import org.eljaiek.jmira.core.DownloadAdapter;
 import org.eljaiek.jmira.core.DownloadException;
 
@@ -11,8 +12,8 @@ import org.eljaiek.jmira.core.DownloadException;
  */
 final class FileDownload extends DownloadAdapter {
 
-    public FileDownload(String localFolder, URL url) {
-        super(localFolder, url);
+    public FileDownload(String localFolder, URL url, Optional<String> checksum) {
+        super(localFolder, url, checksum);
     }
 
     @Override
@@ -27,7 +28,7 @@ final class FileDownload extends DownloadAdapter {
         try (RandomAccessFile raf = new RandomAccessFile(getLocalUrl(), "rw")) {
             raf.seek(getDownloaded());
 
-            try(InputStream stream = new FileInputStream(file)) {
+            try (InputStream stream = new FileInputStream(file)) {
                 write(raf, stream);
             }
 

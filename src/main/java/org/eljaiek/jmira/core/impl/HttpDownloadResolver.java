@@ -2,6 +2,7 @@ package org.eljaiek.jmira.core.impl;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Optional;
 import org.eljaiek.jmira.core.Download;
 import org.eljaiek.jmira.core.DownloadResolver;
 import org.springframework.util.Assert;
@@ -13,11 +14,11 @@ import org.springframework.util.Assert;
 public final class HttpDownloadResolver implements DownloadResolver {
 
     @Override
-    public final Download resolve(String localFolder, String url) {
+    public final Download resolve(String localFolder, String url, Optional<String> checksum) {
         Assert.isTrue(url.startsWith("http"));
 
         try {
-            return new HttpDownload(localFolder, new URL(url));
+            return new HttpDownload(localFolder, new URL(url), checksum);
         } catch (MalformedURLException ex) {
             throw new IllegalArgumentException(ex);
         }

@@ -46,7 +46,6 @@ import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 import org.eljaiek.jmira.app.model.SourceModel;
 import org.eljaiek.jmira.app.util.AlertHelper;
-import org.eljaiek.jmira.app.util.ModelMapperHelper;
 import org.eljaiek.jmira.app.view.ViewLoader;
 import org.eljaiek.jmira.app.view.ViewMode;
 import org.eljaiek.jmira.app.view.ViewModel;
@@ -184,7 +183,7 @@ public class EditRepositoryController implements Initializable {
                         .enabled(true)
                         .aptLine(aptline.get())
                         .get();
-                SourceModel sourceModel = ModelMapperHelper.map(source);
+                SourceModel sourceModel = SourceModel.create(source);
                 sourcesListView.getItems().add(sourceModel);
             } catch (IllegalArgumentException ex) {
                 AlertHelper.error(window, messages.getMessage("newSourceDialog.error"), ex.getMessage());

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eljaiek.jmira.core.util.ValidationUtils;
 import org.springframework.util.Assert;
@@ -15,10 +16,12 @@ import org.springframework.util.Assert;
 public final class DownloadBuilder {
     
     private static final Map<String, DownloadResolver> resolvers = new ConcurrentHashMap<>();
-    
+        
     private String url;
     
     private String localFolder;
+    
+    private Optional<String> checksum = Optional.ofNullable(null);
     
     private final List<Observer> observers = new ArrayList<>();
     
@@ -44,6 +47,11 @@ public final class DownloadBuilder {
         return this;
     }
     
+    public final DownloadBuilder checksum(String checksum) {
+        this.checksum = Optional.ofNullable(checksum);
+        return this;
+    }
+    
     public final DownloadBuilder observer(Observer observer) {
         observers.add(observer);
         return this;
@@ -59,7 +67,7 @@ public final class DownloadBuilder {
             throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("dowloadBuilder.error"));
         }
         
-        Download download = resolver.resolve(localFolder, url);        
+        Download download = resolver.resolve(localFolder, url, checksum);        
         observers.forEach(download::register);
         observers.clear();
         return download;

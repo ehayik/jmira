@@ -1,6 +1,10 @@
 package org.eljaiek.jmira.core.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.util.Assert;
 
@@ -19,8 +23,20 @@ public final class ValidationUtils {
         return URL_VALIDATOR.isValid(url);
     }
     
-    public static final boolean isValid(String packagePath, String checksum) {
-        Assert.hasText(packagePath);
-        return new File(packagePath).exists();        
+    public static final boolean isValidFile(String file, String checksum) {        
+        Assert.hasText(file);
+        return isValidFile(new File(file), checksum);
+    }
+    
+    public static final boolean isValidFile(File file, String checksum) {
+        Assert.notNull(file);
+        Assert.hasText(checksum);
+        
+        try (InputStream stream = new FileInputStream(file)) {
+            String md5 = DigestUtils.md5Hex(stream);
+            return md5.equals(checksum); 
+        } catch (IOException ex) {
+            return false;
+        }
     }
 }

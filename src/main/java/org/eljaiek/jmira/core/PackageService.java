@@ -12,6 +12,8 @@ public interface PackageService {
     
     List<DebPackage> list(int start, int limit);
     
+    int count();
+    
     long size();
     
     long downloaded();   

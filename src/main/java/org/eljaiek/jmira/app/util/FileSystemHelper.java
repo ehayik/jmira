@@ -1,5 +1,6 @@
 package org.eljaiek.jmira.app.util;
 
+
 import java.io.File;
 import java.text.DecimalFormat;
 
@@ -12,7 +13,7 @@ public final class FileSystemHelper {
     private FileSystemHelper() {
     }
 
-    public static final String formaSize(long bytes) {
+    public static final String formatSize(long bytes) {
         String format = bytes + "Bytes";
         long kilobyte = 1024;
         long megabyte = kilobyte * 1024;

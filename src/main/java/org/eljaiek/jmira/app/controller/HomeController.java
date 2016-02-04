@@ -1,53 +1,53 @@
 package org.eljaiek.jmira.app.controller;
 
-import java.io.File;
-
-import org.eljaiek.jmira.app.model.RepositoryModel;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.function.Function;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ListCell;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.util.Callback;
-import org.controlsfx.control.action.Action;
+import org.eljaiek.jmira.app.controller.util.*;
+import org.eljaiek.jmira.app.model.RepositoryModel;
 import org.eljaiek.jmira.app.util.AlertHelper;
-import org.eljaiek.jmira.app.util.ModelMapperHelper;
+import org.eljaiek.jmira.app.util.FileSystemHelper;
 import org.eljaiek.jmira.app.view.ViewLoader;
 import org.eljaiek.jmira.app.view.ViewMode;
 import org.eljaiek.jmira.app.view.Views;
-import org.eljaiek.jmira.core.MessageResolver;
-import org.eljaiek.jmira.core.NamesUtils;
-import org.eljaiek.jmira.core.PackageService;
-import org.eljaiek.jmira.core.RepositoryAccessException;
-import org.eljaiek.jmira.core.RepositoryService;
+import org.eljaiek.jmira.core.*;
 import org.eljaiek.jmira.data.model.DebPackage;
 import org.eljaiek.jmira.data.model.Repository;
-import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.eljaiek.jmira.data.repositories.PackagesFileProvider;
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
+import java.io.File;
+import java.net.URL;
+import java.time.Duration;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.scene.control.Pagination;
+import org.eljaiek.jmira.app.model.PackageModel;
 
 /**
  * FXML Controller class
@@ -55,9 +55,11 @@ import org.springframework.stereotype.Controller;
  * @author eduardo.eljaiek
  */
 @Controller
-public class HomeController implements Initializable, PackagesFileProvider, RepositoryProvider {
+public class HomeController implements Initializable, PackagesFileProvider {
 
     private static final String TITLE_TMPL = "JMira 1.0 - %s";
+
+    private static final Logger LOG = LoggerFactory.getLogger(HomeController.class);
 
     @Autowired
     private ViewLoader viewLoader;
@@ -71,23 +73,71 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
     @Autowired
     private PackageService packages;
 
-    @Autowired
-    private ServicePool servicePool;
+    private DownloadScheduler downScheduler;
 
     @FXML
-    private ListView<DebPackage> packagesListView;
+    private ListView<PackageModel> packagesListView;
 
+    @FXML
+    private ProgressBar homeIndicator;
+
+    @FXML
+    private ProgressBar downIndicator;
+
+    @FXML
+    private BorderPane borderPane;
+
+    @FXML
+    private Button openBtn;
+
+    @FXML
+    private Button newBtn;
+
+    @FXML
+    private Button editBtn;
+
+    @FXML
+    private Button syncBtn;
+
+    @FXML
+    private Button downBtn;
+
+    @FXML
+    private Pagination pagination;
+
+    private final PaginationHelper paginationHelper;
+    
     private RepositoryModel current;
-
-    private final BooleanProperty disabled = new SimpleBooleanProperty();
 
     private final Function<RepositoryModel, Void> open;
 
+    private final Timer timer;
+
+    private final ImageView startDownloadIcon;
+
+    private final ImageView cancelDownloadIcon;
+
     public HomeController() {
+        paginationHelper = new PaginationHelper();
+        startDownloadIcon = new ImageView("/org/eljaiek/jmira/app/view/resources/icons/downloadRepo48.png");
+        cancelDownloadIcon = new ImageView("/org/eljaiek/jmira/app/view/resources/icons/downloadCancel48.png");
         open = (RepositoryModel t) -> {
             open(t);
             return null;
         };
+
+        timer = FxTimer.runPeriodically(
+                Duration.ofMillis(2000),
+                () -> {
+                    double percent = FileSystemHelper.getUsedSpacePercent(current.getHome());
+                    homeIndicator.setProgress(percent * 0.01);
+
+                    if (current.getDownloaded() != 0) {
+                        double downPercent = current.getDownloaded() * 100 / current.getSize();
+                        downIndicator.setProgress(downPercent * 0.1);
+                    }
+                });
+        timer.stop();
     }
 
     /**
@@ -95,76 +145,144 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        disabled.set(true);
-        packagesListView.setCellFactory((ListView<DebPackage> param) -> {
+        downScheduler = new DownloadScheduler(packages);
+        
+        packagesListView.setCellFactory((ListView<PackageModel> param) -> {
             return new PackageListCell();
-        });       
-    }
+        });
+        
+        pagination.currentPageIndexProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+             paginationHelper.setPage(newValue.intValue());
+            ObservableList<PackageModel> page = paginationHelper.createPage();
+            packagesListView.setItems(page);
+        });
 
-    public BooleanProperty disabledProperty() {
-        return disabled;
-    }
+        EventHandler onDownloadStop = evt -> {
+            borderPane.getChildren().remove(downScheduler.getControl());
+            borderPane.setCenter(packagesListView);
+            downBtn.setGraphic(startDownloadIcon);
+            downBtn.setOnAction(this::startDownload);
+            disabledOnDowload(false);
+        };
 
-    public boolean isDisabled() {
-        return disabled.get();
-    }
+        downScheduler.setOnCancelled(onDownloadStop);
+        downScheduler.setOnDone(onDownloadStop);
 
-    public void setDisabled(boolean disabled) {
-        this.disabled.set(disabled);
+        downScheduler.setOnLoadSucceeded(evt -> {
+            downBtn.setGraphic(cancelDownloadIcon);
+            downBtn.setOnAction(e -> {
+                downScheduler.cancel();
+            });
+            downBtn.setDisable(false);
+        });
+
+        downScheduler.setOnFail(evt -> {
+            onDownloadStop.handle(evt);
+            Exception error = ((DownloadFailEvent) evt).getError();
+            AlertHelper.error(null, messages.getMessage("download.scheduler.fail"), error.getMessage(), error);
+        });
+
+        downScheduler.setOnDone(evt -> {
+            onDownloadStop.handle(evt);
+            AlertHelper.info(null, messages.getMessage("download.scheduler.done"), "");
+        });
     }
 
     @FXML
-    final void newRepository(ActionEvent event) {
+    void newRepository(ActionEvent event) {
         RepositoryModel model = new RepositoryModel();
         Window window = ((Node) event.getTarget()).getScene().getWindow();
         showRepositoryView(messages.getMessage("repository.newDialog.title"), window, model, ViewMode.CREATE);
         ((Stage) window).setTitle(String.format(TITLE_TMPL, model.getName()));
+        timer.restart();
     }
 
     @FXML
-    final void openRepository(ActionEvent event) {
+    void openRepository(ActionEvent event) {
         Window window = ((Node) event.getTarget()).getScene().getWindow();
         DirectoryChooser chooser = new DirectoryChooser();
         File dir = chooser.showDialog(window);
 
         if (dir != null) {
-            try {
-                Repository repo = repositories.open(dir.getAbsolutePath());
-                current = ModelMapperHelper.map(repo);
-                ((Stage) window).setTitle(String.format(TITLE_TMPL, repo.getName()));
-                disabled.set(false);
-                List<DebPackage> list = packages.list(1, 20);
-                packagesListView.setItems(FXCollections.observableArrayList(list));
-            } catch (IllegalArgumentException | RepositoryAccessException ex) {
-                AlertHelper.error(window, messages.getMessage("repository.openError"), ex.getMessage(), ex);
-            }
+            OpenService service = new OpenService(dir.getAbsolutePath(), repositories, packages);
+            service.setOnSucceeded(evt -> {
+                disableOnOpen(false);
+                updateView();
+            });
+            service.setOnFailed(evt -> {
+                String error = messages.getMessage("repository.open.errorContext", service.getException().getMessage());
+                LOG.error(error, service.getException());
+                AlertHelper.error(window, messages.getMessage("repository.open.errorHeader"), error, service.getException());
+            });
+
+            service.setOnOpen(evt -> current = evt.getModel());
+
+            AlertHelper.progress(messages.getMessage("repository.open.progressHeader"),
+                    messages.getMessage("repository.open.progressContext"),
+                    service);
         }
     }
 
     @FXML
-    final void editRepository(ActionEvent event) {
+    void editRepository(ActionEvent event) {
         Window window = ((Node) event.getTarget()).getScene().getWindow();
         showRepositoryView(current.getName(), window, new RepositoryModel(current), ViewMode.EDIT);
         ((Stage) window).setTitle(String.format(TITLE_TMPL, current.getName()));
     }
 
     @FXML
-    final void syncronize(ActionEvent event) {
-        Service service = servicePool.getService("syncronizeService");
+    void syncronize(ActionEvent event) {
+        timer.stop();
+        final Service service = new SyncronizeService(current, repositories, packages);
         service.setOnSucceeded(evt -> {
-            List<DebPackage> list = packages.list(1, 20);
-            packagesListView.setItems(FXCollections.observableArrayList(list));
+            updateView();
+            downBtn.setDisable(false);
+        });
+
+        service.setOnFailed(evt -> {
+            String error = messages.getMessage("repository.sync.errorContext", current.getName());
+            LOG.error(error, service.getException());
+            AlertHelper.error(null, messages.getMessage("repository.sync.errorHeader"), null, new RuntimeException(error, service.getException()));
+            timer.restart();
         });
 
         AlertHelper.progress(messages.getMessage("repository.sync.progressHeader"),
                 messages.getMessage("repository.sync.progressContext", current.getName()),
-                servicePool.getService("syncronizeService"));
+                service);
+    }
 
+    @FXML
+    void startDownload(ActionEvent event) {
+        downScheduler.downloadedProperty().bindBidirectional(current.downloadedProperty());
+        disabledOnDowload(true);
+        downBtn.setDisable(true);
+        borderPane.getChildren().remove(packagesListView);
+        borderPane.setCenter(downScheduler.getControl());
+        downScheduler.start();
+
+        File f = new File(current.getHome());
+
+        if (f.getFreeSpace() < current.getSize() - current.getDownloaded()) {
+            LOG.warn(messages.getMessage("diskSpace.warn", current.getHome()));
+        }
     }
 
     @FXML
     final void exit(ActionEvent event) {
         Platform.exit();
+    }
+
+    private void disableOnOpen(boolean disable) {
+        editBtn.setDisable(disable);
+        syncBtn.setDisable(disable);
+        downBtn.setDisable(disable);
+    }
+
+    private void disabledOnDowload(boolean disable) {
+        openBtn.setDisable(disable);
+        newBtn.setDisable(disable);
+        editBtn.setDisable(disable);
+        syncBtn.setDisable(disable);
     }
 
     private void showRepositoryView(String title, Window owner, RepositoryModel model, ViewMode mode) {
@@ -185,23 +303,59 @@ public class HomeController implements Initializable, PackagesFileProvider, Repo
     }
 
     private void open(RepositoryModel model) {
-        try {
-            Repository repo = ModelMapperHelper.map(model);
-            repositories.open(repo);
+        try {           
+            repositories.open(model.getRepository());
             current = model;
-            disabled.set(false);
+            disableOnOpen(false);
         } catch (RepositoryAccessException ex) {
             AlertHelper.error(null, messages.getMessage("repository.createError"), ex.getMessage(), ex);
         }
     }
 
-    @Override
-    public final File getFile() {
-        return new File(String.join("/", current.getHome(), NamesUtils.PACKAGES_DAT));
+    private void updateView() {        
+        packagesListView.setItems(paginationHelper.createPage());
+        timer.restart();
     }
 
     @Override
-    public final Repository getRepository() {
-        return ModelMapperHelper.map(current);
+    public final Optional<File> getFile() {
+        File file = null;
+
+        if (current != null) {
+            file = new File(String.join("/", current.getHome(), NamesUtils.PACKAGES_DAT));
+        }
+
+        return Optional.ofNullable(file);
+    }
+
+    private class PaginationHelper {
+
+        private static final int DEFAULT_SIZE = 10;
+        
+        private final int pageSize;
+
+        private int page = 1;
+
+        public PaginationHelper() {
+            this(DEFAULT_SIZE);
+        }        
+
+        public PaginationHelper(int pageSize) {
+            this.pageSize = pageSize;
+        }
+
+        public void setPage(int page) {
+            this.page = page;
+        }       
+
+        public int getItemsCount() {
+            return packages.count();
+        }
+
+        public ObservableList<PackageModel> createPage() {
+            List<DebPackage> list = packages.list((page - 1) * pageSize + 1, pageSize);
+            List<PackageModel> models = list.stream().map(PackageModel::create).collect(Collectors.toList());            
+            return FXCollections.observableArrayList(models);
+        }
     }
 }

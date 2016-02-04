@@ -23,17 +23,22 @@ public class DebPackage implements Serializable {
     private String localUrl;
     
     private String remoteUrl;
+    
+    private String checksum;
 
     public DebPackage() {
     }
 
-    public DebPackage(String name, String version, String description, String relativeUrl, long size) {
+    public DebPackage(String name, String version, String description, String relativeUrl, long size, String localUrl, String remoteUrl, String checksum) {
         this.name = name;
         this.version = version;
         this.description = description;
         this.relativeUrl = relativeUrl;
         this.size = size;
-    }
+        this.localUrl = localUrl;
+        this.remoteUrl = remoteUrl;
+        this.checksum = checksum;
+    }    
 
     public String getName() {
         return name;
@@ -90,6 +95,14 @@ public class DebPackage implements Serializable {
     public void setRemoteUrl(String remoteUrl) {
         this.remoteUrl = remoteUrl;
     }   
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }    
 
     @Override
     public int hashCode() {

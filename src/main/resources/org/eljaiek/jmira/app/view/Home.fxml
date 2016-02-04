@@ -1,36 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.image.*?>
-<?import org.controlsfx.control.*?>
 <?import java.lang.*?>
-<?import java.util.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.*?>
-<?import javafx.scene.text.*?>
 
 <VBox prefHeight="435.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.eljaiek.jmira.app.controller.HomeController">
     <children>
-        <BorderPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+        <BorderPane fx:id="borderPane" maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
             <top>
                 <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                    <items>                       
-                        <Button mnemonicParsing="false" onAction="#openRepository" prefHeight="50.0" prefWidth="50.0">
+                    <items>
+                        <Button mnemonicParsing="false" onAction="#exit">
+                            <graphic>
+                                <ImageView>
+                                    <Image url="@resources/icons/exit48.png" />
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                        <Separator orientation="VERTICAL" prefHeight="10.0" />                       
+                        <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openRepository" prefHeight="50.0" prefWidth="50.0">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/openRepo48.png" />
                                 </ImageView>
                             </graphic>
                         </Button>
-                        <Button mnemonicParsing="false" onAction="#newRepository">
+                        <Button fx:id="newBtn" mnemonicParsing="false" onAction="#newRepository">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/newRepo48.png" />
                                 </ImageView>
                             </graphic>
                         </Button>
-                        <Button disable="${controller.disabled}" mnemonicParsing="false" onAction="#editRepository">
+                        <Button fx:id="editBtn" disable="true" mnemonicParsing="false" onAction="#editRepository">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/editRepo48.png" />
@@ -38,53 +41,67 @@
                             </graphic>
                         </Button>
                         <Separator orientation="VERTICAL" prefHeight="10.0" />
-                        <Button disable="${controller.disabled}" mnemonicParsing="false" onAction="#syncronize">
+                        <Button fx:id="syncBtn" disable="true" mnemonicParsing="false" onAction="#syncronize">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/updateRepo48.png" />
                                 </ImageView>
                             </graphic>
                         </Button>
-                        <Button disable="${controller.disabled}" mnemonicParsing="false">
+                        <Button fx:id="downBtn" disable="true" mnemonicParsing="false" onAction="#startDownload">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/downloadRepo48.png" />
                                 </ImageView>
                             </graphic>
                         </Button>
-                         <Separator orientation="VERTICAL" prefHeight="10.0" />
-                         <Button mnemonicParsing="false" onAction="#exit">
+                        <Separator layoutX="300.0" layoutY="10.0" orientation="VERTICAL" prefHeight="10.0" />
+                        <Button mnemonicParsing="false">
                             <graphic>
                                 <ImageView>
-                                    <Image url="@resources/icons/exit48.png" />
+                                    <Image url="@resources/icons/helpAbout48.png" />
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                         <Button mnemonicParsing="false">
+                            <graphic>
+                                <ImageView>
+                                    <Image url="@resources/icons/helpFaq48.png" />
                                 </ImageView>
                             </graphic>
                         </Button>
                     </items>
                 </ToolBar>
             </top>
-            <center>
-                <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-                    <tabs>
-                        <Tab text="Packages">
-                            <content>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <ListView fx:id="packagesListView" prefHeight="311.0" prefWidth="702.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                           </children></AnchorPane>
-                            </content>
-                        </Tab>
-                        <Tab text="Downloads">
-                            <content>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                            </content>
-                        </Tab>
-                    </tabs>
-                </TabPane>
-            </center>
-         <bottom>
-            <StatusBar BorderPane.alignment="CENTER" />
-         </bottom>
+            <bottom>
+                <ToolBar prefHeight="34.0" prefWidth="702.0" BorderPane.alignment="CENTER">
+                    <items>
+                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@resources/icons/homeDevice32.png" />                               
+                            </image>
+                        </ImageView>
+                        <ProgressBar fx:id="homeIndicator" prefHeight="17.0" prefWidth="84.0" progress="0.0" />
+                        <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="0.0" />
+                        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@resources/icons/downloadProgress24.png" />
+                            </image>
+                        </ImageView>
+                        <ProgressBar fx:id="downIndicator" prefHeight="17.0" prefWidth="84.0" progress="0.0" />
+                    </items>
+                </ToolBar>
+            </bottom>
+         <center>
+            <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <center>
+                   <ListView fx:id="packagesListView" prefHeight="260.0" prefWidth="702.0" BorderPane.alignment="CENTER" />
+               </center>
+               <bottom>
+                  <Pagination fx:id="pagination" prefHeight="52.0" prefWidth="702.0" BorderPane.alignment="CENTER" />
+               </bottom>
+            </BorderPane>
+         </center>
         </BorderPane>
     </children>
 </VBox>

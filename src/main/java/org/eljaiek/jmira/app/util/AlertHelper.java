@@ -19,6 +19,11 @@ public final class AlertHelper {
     private AlertHelper() {
     }
 
+    public static final void info(Window owner, String header, String message) {
+        Alert alert = create(AlertType.INFORMATION, owner, header, message);
+        alert.showAndWait();
+    }
+
     public static final void error(Window owner, String header, String message) {
         Alert alert = create(AlertType.ERROR, owner, header, message);      
         alert.showAndWait();
