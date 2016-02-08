@@ -155,6 +155,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         downScheduler = new DownloadScheduler(packages);
+        listViewPane.getChildren().remove(pagination);
 
         packagesListView.setPlaceholder(new Label("No Content In List"));
         packagesListView.setCellFactory((ListView<PackageModel> param) -> new PackageListCell());
@@ -178,9 +179,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
         downScheduler.setOnLoadSucceeded(evt -> {
             downBtn.setGraphic(cancelDownloadIcon);
-            downBtn.setOnAction(e -> {
-                downScheduler.cancel();
-            });
+            downBtn.setOnAction(e -> downScheduler.cancel());
             downBtn.setDisable(false);
         });
 
@@ -194,7 +193,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         downScheduler.setOnDone(evt -> {
             downBtn.setDisable(false);
             onDownloadStop.handle(evt);
-            AlertHelper.info(null, messages.getMessage("download.scheduler.done"), "");
+            AlertHelper.info(null, messages.getMessage("download.scheduler.done"), "", true);
         });
     }
 
@@ -327,6 +326,13 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         pagination.setPageCount(paginationHelper.getPageCount());
         pagination.setCurrentPageIndex(0);
         packagesListView.setItems(paginationHelper.createPage());
+
+        if (current.getPackagesCount() > paginationHelper.pageSize) {
+            listViewPane.setBottom(pagination);
+        } else {
+            listViewPane.getChildren().remove(pagination);
+        }
+
         visibleLabels.set(true);
         updateToolBar();
         timer.restart();

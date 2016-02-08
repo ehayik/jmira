@@ -160,7 +160,7 @@ public final class DownloadScheduler {
         int i = 0;
         List<DownloadModel> downloads = new ArrayList<>(quantity);
 
-        while (i < quantity) {
+        while (i < quantity && i < downloads.size()) {
             DebPackage p = queue.poll();
             String localUrl = p.getLocalUrl();
             String folder = localUrl.substring(0, localUrl.lastIndexOf('/'));

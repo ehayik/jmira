@@ -5,6 +5,8 @@ import javafx.concurrent.Service;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.controlsfx.dialog.ExceptionDialog;
@@ -20,12 +22,24 @@ public final class AlertHelper {
     }
 
     public static final void info(Window owner, String header, String message) {
-        Alert alert = create(AlertType.INFORMATION, owner, header, message);
-        alert.showAndWait();
+        info(owner, header, message, false);
+    }
+
+    public static final void info(Window owner, String header, String message, boolean alert) {
+
+        if (alert) {
+            String path = AlertHelper.class.getResource("/org/eljaiek/jmira/app/view/resources/audio/info_alert.mp3").toString();
+            Media media = new Media(path);
+            MediaPlayer mp = new MediaPlayer(media);
+            mp.play();
+        }
+
+        Alert alertDialog = create(AlertType.INFORMATION, owner, header, message);
+        alertDialog.showAndWait();
     }
 
     public static final void error(Window owner, String header, String message) {
-        Alert alert = create(AlertType.ERROR, owner, header, message);      
+        Alert alert = create(AlertType.ERROR, owner, header, message);
         alert.showAndWait();
     }
 
