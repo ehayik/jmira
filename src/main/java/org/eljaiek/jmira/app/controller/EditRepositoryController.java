@@ -1,6 +1,40 @@
 package org.eljaiek.jmira.app.controller;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.stage.*;
+import org.apache.commons.lang.StringUtils;
+import org.controlsfx.control.CheckComboBox;
+import org.controlsfx.validation.Severity;
+import org.controlsfx.validation.ValidationResult;
+import org.controlsfx.validation.ValidationSupport;
+import org.controlsfx.validation.Validator;
 import org.eljaiek.jmira.app.model.RepositoryModel;
+import org.eljaiek.jmira.app.model.SourceModel;
+import org.eljaiek.jmira.app.util.AlertHelper;
+import org.eljaiek.jmira.app.view.ViewLoader;
+import org.eljaiek.jmira.app.view.ViewMode;
+import org.eljaiek.jmira.app.view.ViewModel;
+import org.eljaiek.jmira.app.view.Views;
+import org.eljaiek.jmira.core.MessageResolver;
+import org.eljaiek.jmira.data.model.Architecture;
+import org.eljaiek.jmira.data.model.Source;
+import org.eljaiek.jmira.data.model.SourceBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -10,53 +44,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Function;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-
-import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Control;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.Window;
-import org.apache.commons.lang.StringUtils;
-import org.controlsfx.control.CheckComboBox;
-import org.controlsfx.validation.Severity;
-import org.controlsfx.validation.ValidationResult;
-import org.controlsfx.validation.ValidationSupport;
-import org.controlsfx.validation.Validator;
-import org.eljaiek.jmira.app.model.SourceModel;
-import org.eljaiek.jmira.app.util.AlertHelper;
-import org.eljaiek.jmira.app.view.ViewLoader;
-import org.eljaiek.jmira.app.view.ViewMode;
-import org.eljaiek.jmira.app.view.ViewModel;
-import org.eljaiek.jmira.app.view.Views;
-import org.eljaiek.jmira.core.MessageResolver;
 import static org.eljaiek.jmira.core.NamesUtils.SETTINGS_JSON;
-import org.eljaiek.jmira.data.model.Architecture;
-import org.eljaiek.jmira.data.model.Source;
-import org.eljaiek.jmira.data.model.SourceBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 
 /**
  * FXML Controller class
@@ -94,7 +83,7 @@ public class EditRepositoryController implements Initializable {
     private Optional<RepositoryModel> model = Optional.ofNullable(null);
 
     @ViewModel("acceptAction")
-    private Function<RepositoryModel, Void> acccept;
+    private Function<RepositoryModel, Void> accept;
 
     private final ValidationSupport validationSupport = new ValidationSupport();
 
@@ -277,8 +266,8 @@ public class EditRepositoryController implements Initializable {
     void accept(ActionEvent event) {
         model.get().setHome(homeTextField.getText());
 
-        if (acccept != null) {
-            acccept.apply(model.get());
+        if (accept != null) {
+            accept.apply(model.get());
         }
 
         cancel(event);

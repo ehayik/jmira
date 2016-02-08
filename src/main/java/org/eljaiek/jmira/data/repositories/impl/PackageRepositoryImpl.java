@@ -1,25 +1,19 @@
 package org.eljaiek.jmira.data.repositories.impl;
 
 import com.google.common.collect.Lists;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
+import org.eljaiek.jmira.core.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
 import org.eljaiek.jmira.data.repositories.DataAccessException;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.eljaiek.jmira.data.repositories.PackagesFileProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.eljaiek.jmira.core.util.ValidationUtils;
-import org.springframework.util.Assert;
 
 @Repository
 final class PackageRepositoryImpl implements PackageRepository {
@@ -60,9 +54,8 @@ final class PackageRepositoryImpl implements PackageRepository {
 
     @Override
     public List<DebPackage> findAll(int start, int limit) {
-        Assert.isTrue(provider.getFile().isPresent());     
-        Assert.isTrue(start > 0 && limit > 0 && limit > start);
-        
+        Assert.isTrue(provider.getFile().isPresent());
+
         if (!provider.getFile().get().exists()) {
             return Lists.newArrayList();
         }
@@ -70,7 +63,7 @@ final class PackageRepositoryImpl implements PackageRepository {
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
             List<DebPackage> result = new ArrayList<>(limit);
             int size = 0;
-            int seeked = 1;
+            int seeked = 0;
             raf.readInt();
             raf.readLong();
 
@@ -145,7 +138,7 @@ final class PackageRepositoryImpl implements PackageRepository {
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
-                if (ValidationUtils.isValidFile(pkg.getLocalUrl(), null)) {
+                if (ValidationUtils.isValidFile(pkg.getLocalUrl(), pkg.getChecksum())) {
                     downloaded += pkg.getSize();
                 }
             }
@@ -165,8 +158,8 @@ final class PackageRepositoryImpl implements PackageRepository {
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
-            int count = raf.readInt();
             List<DebPackage> result = new ArrayList<>(0);
+            raf.readInt();
             raf.readLong();
 
             while (raf.getFilePointer() != raf.length()) {
@@ -174,9 +167,8 @@ final class PackageRepositoryImpl implements PackageRepository {
                 byte b[] = new byte[length];
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
-                File file = new File(pkg.getLocalUrl());
 
-                if (!file.exists() || pkg.getSize() != file.length()) {
+                if (!ValidationUtils.isValidFile(new File(pkg.getLocalUrl()), pkg.getChecksum())) {
                     result.add(pkg);
                 }
             }
@@ -184,6 +176,36 @@ final class PackageRepositoryImpl implements PackageRepository {
             return result;
         } catch (IOException | ClassNotFoundException ex) {
             throw new DataAccessException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public int countDownloaded() {
+        Assert.isTrue(provider.getFile().isPresent());
+        int count = 0;
+
+        if (!provider.getFile().get().exists()) {
+            return count;
+        }
+
+        try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
+            raf.readInt();
+            raf.readLong();
+
+            while (raf.getFilePointer() != raf.length()) {
+                int length = raf.readInt();
+                byte b[] = new byte[length];
+                raf.read(b);
+                DebPackage pkg = (DebPackage) toObject(b);
+
+                if (ValidationUtils.isValidFile(new File(pkg.getLocalUrl()), pkg.getChecksum())) {
+                    count++;
+                }
+            }
+
+            return count;
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new DataAccessException(ex);
         }
     }
 

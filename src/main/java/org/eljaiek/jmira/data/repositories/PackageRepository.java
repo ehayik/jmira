@@ -1,8 +1,9 @@
 
 package org.eljaiek.jmira.data.repositories;
 
-import java.util.List;
 import org.eljaiek.jmira.data.model.DebPackage;
+
+import java.util.List;
 
 /**
  *
@@ -19,6 +20,8 @@ public interface PackageRepository {
     void removeAll();
     
     int count();
+    
+    int countDownloaded();
     
     long size();
     

@@ -30,11 +30,9 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
 
     private final Scanner scanner;
     
-    private Optional<String> remoteHome = Optional.ofNullable(null);
+    private Optional<String> remoteHome = Optional.empty();
     
-    private Optional<String> localHome = Optional.ofNullable(null);
-    
-    private long dowloaded = 0;
+    private Optional<String> localHome = Optional.empty();
 
     public PackageScanner(String packagesFile) throws FileNotFoundException {
         scanner = new Scanner(new File(packagesFile), CHAR_SET);
@@ -107,7 +105,10 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
         scanner.close();
     }
 
-    public final List<DebPackage> list() {
+    public final PackageList list() {
+        int downloadedCount = 0;
+        long size = 0;
+        long downloaded = 0;
         List<DebPackage> packages = new ArrayList<>();
 
         while (hasNext()) {
@@ -121,17 +122,56 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
                 pkg.setRemoteUrl(String.join("/", remoteHome.get(), pkg.getRelativeUrl()));
             }
             
-            if (ValidationUtils.isValidFile(pkg.getLocalUrl(), null)) {
-                dowloaded += pkg.getSize();
+            if (ValidationUtils.isValidFile(pkg.getLocalUrl(), pkg.getChecksum())) {
+                downloaded += pkg.getSize();
+                downloadedCount++;
             }
-            
+
+            size += pkg.getSize();
             packages.add(pkg);
+        }       
+
+        return new PackageList(packages, downloadedCount, size, downloaded);
+    }
+
+    public class PackageList implements Iterable<DebPackage> {
+
+        private final  List<DebPackage> packages;
+
+        private final int downloadedCount;
+
+        private final long size;
+
+        private final long downloaded;
+
+        public PackageList(List<DebPackage> packages, int downloadedCount, long size, long downloaded) {
+            this.packages = packages;
+            this.downloadedCount = downloadedCount;
+            this.size = size;
+            this.downloaded = downloaded;
         }
 
-        return packages;
-    }
-    
-    public long getDownloaded() {
-        return dowloaded;
+        @Override
+        public Iterator<DebPackage> iterator() {
+            return packages.iterator();
+        }        
+
+        public List<DebPackage> getPackages() {
+            return packages;
+        }
+
+        public int getCount() { return packages.size(); }
+
+        public int getDownloadedCount() {
+            return downloadedCount;
+        }
+
+        public long getDownloaded() {
+            return downloaded;
+        }
+
+        public long getSize() {
+            return size;
+        }
     }
 }

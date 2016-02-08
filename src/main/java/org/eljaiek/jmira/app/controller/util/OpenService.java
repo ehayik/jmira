@@ -8,7 +8,6 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import org.eljaiek.jmira.app.model.RepositoryModel;
-import org.eljaiek.jmira.core.PackageService;
 import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
 
@@ -21,14 +20,12 @@ public final class OpenService extends Service<Void> {
 
     private final RepositoryService repositories;
 
-    private final PackageService packages;
-
     private final ObjectProperty<EventHandler<OpenEvent>> onOpen;
 
-    public OpenService(String home, RepositoryService repositoryService, PackageService packageService) {
+    public OpenService(String home, RepositoryService repositoryService) {
         this.home = home;
         repositories = repositoryService;
-        packages = packageService;
+       // packages = packageService;
         onOpen = new SimpleObjectProperty<>();
     }
 
@@ -41,8 +38,6 @@ public final class OpenService extends Service<Void> {
                 RepositoryModel model = RepositoryModel.create(repository);                
                 onOpen.get().handle(new OpenEvent(EventType.ROOT, model));  
                 updateProgress(1, 2);
-                model.setDownloaded(packages.downloaded());
-                model.setSize(packages.size());
                 updateProgress(1, 2);
                 return null;
             }

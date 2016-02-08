@@ -1,20 +1,24 @@
 package org.eljaiek.jmira.core.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.*;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.LongConsumer;
-import org.eljaiek.jmira.core.RepositoryService;
-import org.eljaiek.jmira.core.PackageScanner;
 import org.eljaiek.jmira.core.MessageResolver;
-import static org.eljaiek.jmira.core.NamesUtils.SETTINGS_JSON;
+import org.eljaiek.jmira.core.PackageScanner;
 import org.eljaiek.jmira.core.RepositoryAccessException;
+import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.LongConsumer;
+
+import static org.eljaiek.jmira.core.NamesUtils.SETTINGS_JSON;
 
 /**
  * @author eduardo.eljaiek
@@ -37,16 +41,17 @@ public final class RepositoryServiceImpl implements RepositoryService {
     private PackageRepository packages;
 
     @Override
-    public final void open(Repository reposiory) throws RepositoryAccessException {
+    public final void save(Repository repository) throws RepositoryAccessException {
+        Assert.notNull(repository);
 
         try {
-            File home = new File(String.join(SLASH, reposiory.getHome(), SETTINGS_JSON));
+            File home = new File(String.join(SLASH, repository.getHome(), SETTINGS_JSON));
 
             if (!home.exists()) {
                 home.createNewFile();
             }
 
-            objectMapper.writeValue(home, reposiory);
+            objectMapper.writeValue(home, repository);
         } catch (IOException ex) {
             throw new RepositoryAccessException(ex.getMessage(), ex);
         }
@@ -65,25 +70,31 @@ public final class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public final long synchronize(Repository repository, LongConsumer progress) {
+    public final void synchronize(Repository repository, LongConsumer progress) {
         Optional<LongConsumer> consumer = Optional.ofNullable(progress);
         Progress.reset(repository.getSources().size());
         List<SourcesHelper.SourceFiles> sfs = SourcesHelper.download(repository);
+        repository.setDownloadedCount(0);
+        repository.setDownloadedSize(0);
+        repository.setSize(0);
+        repository.setPackagesCount(0);
         packages.removeAll();
 
         sfs.forEach(sf -> sf.stream().forEach(f -> {
-            String locaHome = String.join("/", repository.getHome(), sf.getFolderName());
+            String localHome = String.join("/", repository.getHome(), sf.getFolderName());
 
-            try (PackageScanner scanner = new PackageScanner(f, locaHome, sf.getUrl())) {
-                packages.saveAll(scanner.list());
-                Progress.downloaded += scanner.getDownloaded();
+            try (PackageScanner scanner = new PackageScanner(f, localHome, sf.getUrl())) {
+                PackageScanner.PackageList packageList = scanner.list();
+                packages.saveAll(packageList.getPackages());
+                repository.setPackagesCount(repository.getPackagesCount() + packageList.getCount());
+                repository.setSize(repository.getSize() + packageList.getSize());
+                repository.setDownloadedSize(repository.getDownloadedSize() + packageList.getDownloaded());
+                repository.setDownloadedCount(repository.getDownloadedCount() + packageList.getDownloadedCount());
                 consumer.orElse(DEF_CONSUMER).accept(Progress.update());
             } catch (FileNotFoundException ex) {
                 throw new RuntimeException(ex);
             }
         }));
-
-        return Progress.downloaded;
     }
 
     private static final class Progress {
@@ -92,8 +103,6 @@ public final class RepositoryServiceImpl implements RepositoryService {
 
         private static int current;
 
-        private static long downloaded;
-
         private static int update() {
             return (++current * 100) / total;
         }
@@ -101,7 +110,6 @@ public final class RepositoryServiceImpl implements RepositoryService {
         private static void reset(int total) {
             Progress.total = total;
             Progress.current = 0;
-            Progress.downloaded = 0;
         }
     }
 }

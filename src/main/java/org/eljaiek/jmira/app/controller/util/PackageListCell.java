@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.app.controller.util;
 
-import java.io.File;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,8 +9,6 @@ import javafx.scene.image.ImageView;
 import org.eljaiek.jmira.app.model.PackageModel;
 import org.eljaiek.jmira.app.util.FileSystemHelper;
 import org.eljaiek.jmira.core.MessageResolver;
-import org.eljaiek.jmira.core.util.ValidationUtils;
-import org.eljaiek.jmira.data.model.DebPackage;
 
 /**
  *
@@ -20,7 +17,7 @@ import org.eljaiek.jmira.data.model.DebPackage;
 public final class PackageListCell extends ListCell<PackageModel> {
 
     private static final String FXML_URL = "/org/eljaiek/jmira/app/view/PackageListCell.fxml";
-    
+
     @FXML
     private Label nameLabel;
 
@@ -33,7 +30,7 @@ public final class PackageListCell extends ListCell<PackageModel> {
     public PackageListCell() {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_URL));
         loader.setController(PackageListCell.this);
-        
+
         try {
             loader.load();
             setGraphic(loader.getRoot());
@@ -46,9 +43,9 @@ public final class PackageListCell extends ListCell<PackageModel> {
     protected void updateItem(PackageModel item, boolean empty) {
         super.updateItem(item, empty);
 
-        if (item == null) {
+        if (empty || item == null) {
             return;
-        }       
+        }
 
         nameLabel.setText(item.getName());
         String size = MessageResolver.getDefault()

@@ -1,7 +1,11 @@
 package org.eljaiek.jmira.app.controller;
 
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -10,16 +14,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import javafx.stage.*;
 import org.eljaiek.jmira.app.controller.util.*;
+import org.eljaiek.jmira.app.model.PackageModel;
 import org.eljaiek.jmira.app.model.RepositoryModel;
 import org.eljaiek.jmira.app.util.AlertHelper;
 import org.eljaiek.jmira.app.util.FileSystemHelper;
@@ -28,7 +28,6 @@ import org.eljaiek.jmira.app.view.ViewMode;
 import org.eljaiek.jmira.app.view.Views;
 import org.eljaiek.jmira.core.*;
 import org.eljaiek.jmira.data.model.DebPackage;
-import org.eljaiek.jmira.data.model.Repository;
 import org.eljaiek.jmira.data.repositories.PackagesFileProvider;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
@@ -39,15 +38,11 @@ import org.springframework.stereotype.Controller;
 
 import java.io.File;
 import java.net.URL;
+import java.text.NumberFormat;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
-import javafx.scene.control.Pagination;
-import org.eljaiek.jmira.app.model.PackageModel;
 
 /**
  * FXML Controller class
@@ -55,11 +50,25 @@ import org.eljaiek.jmira.app.model.PackageModel;
  * @author eduardo.eljaiek
  */
 @Controller
-public class HomeController implements Initializable, PackagesFileProvider {
+public class HomeController implements Initializable, CloseRequestHandler, PackagesFileProvider {
 
-    private static final String TITLE_TMPL = "JMira 1.0 - %s";
+    private static final String TITLE_TEMPLATE = "JMira 1.0 - %s";
 
     private static final Logger LOG = LoggerFactory.getLogger(HomeController.class);
+
+    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getNumberInstance(Locale.getDefault());
+
+    private final PaginationHelper paginationHelper;
+
+    private final Function<RepositoryModel, Void> open;
+
+    private final Timer timer;
+
+    private final ImageView startDownloadIcon;
+
+    private final ImageView cancelDownloadIcon;
+
+    private final BooleanProperty visibleLabels = new SimpleBooleanProperty(false);
 
     @Autowired
     private ViewLoader viewLoader;
@@ -85,7 +94,10 @@ public class HomeController implements Initializable, PackagesFileProvider {
     private ProgressBar downIndicator;
 
     @FXML
-    private BorderPane borderPane;
+    private BorderPane mainPane;
+
+    @FXML
+    private BorderPane listViewPane;
 
     @FXML
     private Button openBtn;
@@ -98,46 +110,43 @@ public class HomeController implements Initializable, PackagesFileProvider {
 
     @FXML
     private Button syncBtn;
-
     @FXML
     private Button downBtn;
 
     @FXML
     private Pagination pagination;
 
-    private final PaginationHelper paginationHelper;
-    
+    @FXML
+    private Label availablePackages;
+
+    @FXML
+    private Label downPackages;
+
     private RepositoryModel current;
-
-    private final Function<RepositoryModel, Void> open;
-
-    private final Timer timer;
-
-    private final ImageView startDownloadIcon;
-
-    private final ImageView cancelDownloadIcon;
 
     public HomeController() {
         paginationHelper = new PaginationHelper();
         startDownloadIcon = new ImageView("/org/eljaiek/jmira/app/view/resources/icons/downloadRepo48.png");
         cancelDownloadIcon = new ImageView("/org/eljaiek/jmira/app/view/resources/icons/downloadCancel48.png");
+        timer = FxTimer.runPeriodically(Duration.ofMillis(2000), () -> updateToolBar());
+        timer.stop();
         open = (RepositoryModel t) -> {
             open(t);
+            timer.restart();
             return null;
         };
+    }
 
-        timer = FxTimer.runPeriodically(
-                Duration.ofMillis(2000),
-                () -> {
-                    double percent = FileSystemHelper.getUsedSpacePercent(current.getHome());
-                    homeIndicator.setProgress(percent * 0.01);
+    public boolean isVisibleLabels() {
+        return visibleLabels.get();
+    }
 
-                    if (current.getDownloaded() != 0) {
-                        double downPercent = current.getDownloaded() * 100 / current.getSize();
-                        downIndicator.setProgress(downPercent * 0.1);
-                    }
-                });
-        timer.stop();
+    public void setVisibleLabels(boolean value) {
+        visibleLabels.set(value);
+    }
+
+    public BooleanProperty visibleLabelsProperty() {
+        return visibleLabels;
     }
 
     /**
@@ -146,23 +155,22 @@ public class HomeController implements Initializable, PackagesFileProvider {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         downScheduler = new DownloadScheduler(packages);
-        
-        packagesListView.setCellFactory((ListView<PackageModel> param) -> {
-            return new PackageListCell();
-        });
-        
+
+        packagesListView.setPlaceholder(new Label("No Content In List"));
+        packagesListView.setCellFactory((ListView<PackageModel> param) -> new PackageListCell());
+
         pagination.currentPageIndexProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-             paginationHelper.setPage(newValue.intValue());
+            paginationHelper.setPage(newValue.intValue());
             ObservableList<PackageModel> page = paginationHelper.createPage();
             packagesListView.setItems(page);
         });
 
         EventHandler onDownloadStop = evt -> {
-            borderPane.getChildren().remove(downScheduler.getControl());
-            borderPane.setCenter(packagesListView);
+            mainPane.getChildren().remove(downScheduler.getControl());
+            mainPane.setCenter(listViewPane);
             downBtn.setGraphic(startDownloadIcon);
             downBtn.setOnAction(this::startDownload);
-            disabledOnDowload(false);
+            disabledOnDownload(false);
         };
 
         downScheduler.setOnCancelled(onDownloadStop);
@@ -177,12 +185,14 @@ public class HomeController implements Initializable, PackagesFileProvider {
         });
 
         downScheduler.setOnFail(evt -> {
+            downBtn.setDisable(false);
             onDownloadStop.handle(evt);
             Exception error = ((DownloadFailEvent) evt).getError();
             AlertHelper.error(null, messages.getMessage("download.scheduler.fail"), error.getMessage(), error);
         });
 
         downScheduler.setOnDone(evt -> {
+            downBtn.setDisable(false);
             onDownloadStop.handle(evt);
             AlertHelper.info(null, messages.getMessage("download.scheduler.done"), "");
         });
@@ -193,8 +203,7 @@ public class HomeController implements Initializable, PackagesFileProvider {
         RepositoryModel model = new RepositoryModel();
         Window window = ((Node) event.getTarget()).getScene().getWindow();
         showRepositoryView(messages.getMessage("repository.newDialog.title"), window, model, ViewMode.CREATE);
-        ((Stage) window).setTitle(String.format(TITLE_TMPL, model.getName()));
-        timer.restart();
+        ((Stage) window).setTitle(String.format(TITLE_TEMPLATE, model.getName()));
     }
 
     @FXML
@@ -204,7 +213,7 @@ public class HomeController implements Initializable, PackagesFileProvider {
         File dir = chooser.showDialog(window);
 
         if (dir != null) {
-            OpenService service = new OpenService(dir.getAbsolutePath(), repositories, packages);
+            OpenService service = new OpenService(dir.getAbsolutePath(), repositories);
             service.setOnSucceeded(evt -> {
                 disableOnOpen(false);
                 updateView();
@@ -227,13 +236,13 @@ public class HomeController implements Initializable, PackagesFileProvider {
     void editRepository(ActionEvent event) {
         Window window = ((Node) event.getTarget()).getScene().getWindow();
         showRepositoryView(current.getName(), window, new RepositoryModel(current), ViewMode.EDIT);
-        ((Stage) window).setTitle(String.format(TITLE_TMPL, current.getName()));
+        ((Stage) window).setTitle(String.format(TITLE_TEMPLATE, current.getName()));
     }
 
     @FXML
-    void syncronize(ActionEvent event) {
+    void synchronize(ActionEvent event) {
         timer.stop();
-        final Service service = new SyncronizeService(current, repositories, packages);
+        final Service service = new SynchronizeService(current, repositories);
         service.setOnSucceeded(evt -> {
             updateView();
             downBtn.setDisable(false);
@@ -254,10 +263,11 @@ public class HomeController implements Initializable, PackagesFileProvider {
     @FXML
     void startDownload(ActionEvent event) {
         downScheduler.downloadedProperty().bindBidirectional(current.downloadedProperty());
-        disabledOnDowload(true);
+        downScheduler.downloadedCountProperty().bindBidirectional(current.downloadedCountProperty());
+        disabledOnDownload(true);
         downBtn.setDisable(true);
-        borderPane.getChildren().remove(packagesListView);
-        borderPane.setCenter(downScheduler.getControl());
+        mainPane.getChildren().remove(listViewPane);
+        mainPane.setCenter(downScheduler.getControl());
         downScheduler.start();
 
         File f = new File(current.getHome());
@@ -268,8 +278,9 @@ public class HomeController implements Initializable, PackagesFileProvider {
     }
 
     @FXML
-    final void exit(ActionEvent event) {
-        Platform.exit();
+    final void exit(ActionEvent evt) {
+        Window window = ((Node) evt.getTarget()).getScene().getWindow();
+        close(window);
     }
 
     private void disableOnOpen(boolean disable) {
@@ -278,7 +289,7 @@ public class HomeController implements Initializable, PackagesFileProvider {
         downBtn.setDisable(disable);
     }
 
-    private void disabledOnDowload(boolean disable) {
+    private void disabledOnDownload(boolean disable) {
         openBtn.setDisable(disable);
         newBtn.setDisable(disable);
         editBtn.setDisable(disable);
@@ -303,8 +314,8 @@ public class HomeController implements Initializable, PackagesFileProvider {
     }
 
     private void open(RepositoryModel model) {
-        try {           
-            repositories.open(model.getRepository());
+        try {
+            repositories.save(model.getRepository());
             current = model;
             disableOnOpen(false);
         } catch (RepositoryAccessException ex) {
@@ -312,9 +323,27 @@ public class HomeController implements Initializable, PackagesFileProvider {
         }
     }
 
-    private void updateView() {        
+    private void updateView() {
+        pagination.setPageCount(paginationHelper.getPageCount());
+        pagination.setCurrentPageIndex(0);
         packagesListView.setItems(paginationHelper.createPage());
+        visibleLabels.set(true);
+        updateToolBar();
         timer.restart();
+    }
+
+    private void updateToolBar() {
+        visibleLabels.set(true);
+        availablePackages.setText(NUMBER_FORMAT.format(current.getPackagesCount()));
+        downPackages.setText(NUMBER_FORMAT.format(current.getDownloadedCount()));
+
+        double percent = FileSystemHelper.getUsedSpacePercent(current.getHome());
+        homeIndicator.setProgress(percent * 0.01);
+
+        if (current.getDownloaded() != 0) {
+            double downPercent = current.getDownloaded() * 100 / current.getSize();
+            downIndicator.setProgress(downPercent * 0.1);
+        }
     }
 
     @Override
@@ -328,33 +357,48 @@ public class HomeController implements Initializable, PackagesFileProvider {
         return Optional.ofNullable(file);
     }
 
+    @Override
+    public void close(Window window) {
+        try {
+
+            if (current != null) {
+                repositories.save(current.getRepository());
+            }
+
+        } catch (RepositoryAccessException | IllegalArgumentException ex) {
+            LOG.error(ex.getMessage(), ex);
+        }
+
+        Platform.exit();
+    }
+
     private class PaginationHelper {
 
-        private static final int DEFAULT_SIZE = 10;
-        
+        private static final int DEFAULT_SIZE = 50;
+
         private final int pageSize;
 
-        private int page = 1;
+        private int pageIndex = 0;
 
         public PaginationHelper() {
             this(DEFAULT_SIZE);
-        }        
+        }
 
         public PaginationHelper(int pageSize) {
             this.pageSize = pageSize;
         }
 
         public void setPage(int page) {
-            this.page = page;
-        }       
+            this.pageIndex = page;
+        }
 
-        public int getItemsCount() {
-            return packages.count();
+        public int getPageCount() {
+            return current.getPackagesCount() / pageSize;
         }
 
         public ObservableList<PackageModel> createPage() {
-            List<DebPackage> list = packages.list((page - 1) * pageSize + 1, pageSize);
-            List<PackageModel> models = list.stream().map(PackageModel::create).collect(Collectors.toList());            
+            List<DebPackage> list = packages.list(pageIndex * pageSize, pageSize);
+            List<PackageModel> models = list.stream().map(PackageModel::create).collect(Collectors.toList());
             return FXCollections.observableArrayList(models);
         }
     }

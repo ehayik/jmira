@@ -1,6 +1,8 @@
 package org.eljaiek.jmira.app.controller.util;
 
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -39,6 +41,8 @@ public final class DownloadScheduler {
 
     private final LogViewer logViewer;
 
+    private final IntegerProperty downloadedCount;
+
     private final LongProperty downloaded;
 
     private final Queue<Task<Void>> tasks;
@@ -59,6 +63,7 @@ public final class DownloadScheduler {
 
     public DownloadScheduler(PackageService packageService) {
         this.packageService = packageService;
+        downloadedCount = new SimpleIntegerProperty(0);
         downloaded = new SimpleLongProperty(0);
         queue = new ConcurrentLinkedQueue<>();
         tasks = new ConcurrentLinkedQueue<>();
@@ -68,13 +73,11 @@ public final class DownloadScheduler {
         container.setOrientation(Orientation.VERTICAL);
     }
 
-    public TaskProgressView getProgressView() {
-        return progressView;
-    }
-
     public Node getControl() {
         return container;
     }
+
+    public IntegerProperty downloadedCountProperty() { return downloadedCount; }
 
     public LongProperty downloadedProperty() {
         return downloaded;
@@ -142,7 +145,7 @@ public final class DownloadScheduler {
         start(task);
     }
 
-    private void start(Task task) {
+    private void start(Task<Void> task) {
 
         try {
             tasks.add(task);
@@ -159,8 +162,8 @@ public final class DownloadScheduler {
 
         while (i < quantity) {
             DebPackage p = queue.poll();
-            String locaUrl = p.getLocalUrl();
-            String folder = locaUrl.substring(0, locaUrl.lastIndexOf('/'));
+            String localUrl = p.getLocalUrl();
+            String folder = localUrl.substring(0, localUrl.lastIndexOf('/'));
             Download download = DownloadBuilder
                     .create()
                     .localFolder(folder).url(p.getRemoteUrl())
@@ -300,6 +303,7 @@ public final class DownloadScheduler {
             }
 
             if (DownloadStatus.COMPLETE == dn.getStatus()) {
+                downloadedCount.set(downloadedCount.get() + 1);
                 downloaded.set(downloaded.get() + dn.getSize());
                 LOG.info(MessageResolver
                         .getDefault()
