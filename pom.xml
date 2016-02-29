@@ -25,9 +25,8 @@
         <guava.version>18.0</guava.version>
     </properties>
 
-    <organization>
-        <!-- Used as the 'Vendor' for JNLP generation -->
-        <name>Eljaiek</name>
+    <organization>      
+        <name>eljaiek</name>
     </organization>
     
     <dependencies>   
@@ -194,5 +193,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

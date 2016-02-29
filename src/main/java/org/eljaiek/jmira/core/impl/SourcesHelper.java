@@ -5,9 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -78,22 +80,17 @@ final class SourcesHelper {
         final String remoteFolder = String.join(SLASH, source.getUri(), DISTS_FOLDER, source.getDistribution());
         final File folder = new File(String.join(SLASH, repository.getHome(), arr[arr.length - 1], DISTS_FOLDER, source.getDistribution()));
         folder.mkdirs();
-
+        
         POOL.submit((Runnable) DownloadBuilder.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE))
                 .localFolder(folder.getAbsolutePath())
                 .get());
-
-        POOL.submit((Runnable) DownloadBuilder.create()
-                .url(String.join(SLASH, remoteFolder, RELEASE))
-                .localFolder(folder.getAbsolutePath())
-                .get());
-
+     
         POOL.submit((Runnable) DownloadBuilder.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE_GPG))
                 .localFolder(folder.getAbsolutePath())
                 .get());
-
+    
         for (String component : source.getComponentsList()) {
             repository.getArchitectures()
                     .forEach(arch -> download(remoteFolder, folder, component, arch, sf));
@@ -112,16 +109,11 @@ final class SourcesHelper {
                 .url(String.join(SLASH, remote, RELEASE))
                 .localFolder(local.getAbsolutePath())
                 .get());
-
-        POOL.submit((Runnable) DownloadBuilder.create()
-                .url(String.join(SLASH, remote, RELEASE))
-                .localFolder(local.getAbsolutePath())
-                .get());
-
+       
         POOL.submit((Runnable) DownloadBuilder.create()
                 .url(String.join(SLASH, remote, PACKAGES_GZ))
                 .localFolder(local.getAbsolutePath())
-                .get());
+                .get());     
 
         POOL.submit((Runnable) () -> {
 
@@ -130,12 +122,14 @@ final class SourcesHelper {
                         .url(String.join(SLASH, remote, PACKAGES_BZ2))
                         .localFolder(local.getAbsolutePath())
                         .get().run();
+                
+                LOG.debug("Downloaded File: " + String.join(SLASH, remote, PACKAGES_BZ2));
 
-                String pkgFile = String.join(SLASH, local.getAbsolutePath(), PACKAGES);
-                File file = new File(pkgFile);
+               // String pkgFile = String.join(SLASH, local.getAbsolutePath(), PACKAGES);
+                File file = Files.createTempFile(UUID.randomUUID().toString(), null).toFile();
                 InputStream inputStream = new FileInputStream(String.join(SLASH, local.getAbsolutePath(), PACKAGES_BZ2));
                 IOUtils.copy(new BZip2InputStream(inputStream, false), new FileOutputStream(file));
-                sf.add(pkgFile);
+                sf.add(file.getAbsolutePath());
             } catch (IOException ex) {
                 throw new DownloadException(ex.getMessage(), ex);
             }

@@ -172,6 +172,8 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
             downBtn.setGraphic(startDownloadIcon);
             downBtn.setOnAction(this::startDownload);
             disabledOnDownload(false);
+            ObservableList<PackageModel> page = paginationHelper.createPage();
+            packagesListView.setItems(page);
         };
 
         downScheduler.setOnCancelled(onDownloadStop);
@@ -213,10 +215,12 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
         if (dir != null) {
             OpenService service = new OpenService(dir.getAbsolutePath(), repositories);
+
             service.setOnSucceeded(evt -> {
                 disableOnOpen(false);
                 updateView();
             });
+
             service.setOnFailed(evt -> {
                 String error = messages.getMessage("repository.open.errorContext", service.getException().getMessage());
                 LOG.error(error, service.getException());

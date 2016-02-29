@@ -21,9 +21,9 @@ public final class AlertHelper {
     private AlertHelper() {
     }
 
-    public static final void info(Window owner, String header, String message) {
-        info(owner, header, message, false);
-    }
+//    public static final void info(Window owner, String header, String message) {
+//        info(owner, header, message, false);
+//    }
 
     public static final void info(Window owner, String header, String message, boolean alert) {
 

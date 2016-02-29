@@ -8,6 +8,7 @@ import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -38,6 +39,7 @@ public final class RepositoryServiceImpl implements RepositoryService {
     private MessageResolver messages;
 
     @Autowired
+   // @Qualifier("filePackageRepository")
     private PackageRepository packages;
 
     @Override
@@ -63,7 +65,13 @@ public final class RepositoryServiceImpl implements RepositoryService {
         try {
             File homeFile = new File(String.join(SLASH, home, SETTINGS_JSON));
             Assert.isTrue(homeFile.exists(), messages.getMessage("repository.homeError"));
-            return objectMapper.readValue(homeFile, Repository.class);
+            Repository repository = objectMapper.readValue(homeFile, Repository.class);
+            
+            if (!home.equals(repository.getHome())) {
+                repository.setHome(home);
+            }
+            
+            return repository;
         } catch (IOException ex) {
             throw new RepositoryAccessException(ex.getMessage(), ex);
         }

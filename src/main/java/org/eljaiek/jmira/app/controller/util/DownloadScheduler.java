@@ -1,5 +1,6 @@
 package org.eljaiek.jmira.app.controller.util;
 
+import org.eljaiek.jmira.app.model.DownloadModel;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -160,7 +161,7 @@ public final class DownloadScheduler {
         int i = 0;
         List<DownloadModel> downloads = new ArrayList<>(quantity);
 
-        while (i < quantity && i < downloads.size()) {
+        while (i < quantity && i <= queue.size()) {
             DebPackage p = queue.poll();
             String localUrl = p.getLocalUrl();
             String folder = localUrl.substring(0, localUrl.lastIndexOf('/'));

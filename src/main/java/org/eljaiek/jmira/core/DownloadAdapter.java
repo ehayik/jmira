@@ -17,7 +17,7 @@ import org.eljaiek.jmira.core.util.ValidationUtils;
  */
 public abstract class DownloadAdapter extends Observable implements Download {
     
-    private static final int MAX_BUFFER_SIZE = 8040;
+    private static final int MAX_BUFFER_SIZE = 8192;
     
     private final Optional<String> checksum;
     

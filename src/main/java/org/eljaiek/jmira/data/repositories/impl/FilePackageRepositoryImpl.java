@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
-final class PackageRepositoryImpl implements PackageRepository {
+final class FilePackageRepositoryImpl implements PackageRepository {
 
     @Autowired
     private PackagesFileProvider provider;
