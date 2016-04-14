@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.data.repositories.impl;
 
-import com.google.common.collect.Lists;
 import org.eljaiek.jmira.core.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
 import org.eljaiek.jmira.data.repositories.DataAccessException;
@@ -12,6 +11,7 @@ import org.springframework.util.Assert;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +57,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
-            return Lists.newArrayList();
+            return Collections.EMPTY_LIST;
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
@@ -154,7 +154,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
-            return Lists.newArrayList();
+            return Collections.EMPTY_LIST;
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {

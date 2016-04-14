@@ -8,7 +8,6 @@ import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -39,7 +38,6 @@ public final class RepositoryServiceImpl implements RepositoryService {
     private MessageResolver messages;
 
     @Autowired
-   // @Qualifier("filePackageRepository")
     private PackageRepository packages;
 
     @Override

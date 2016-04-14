@@ -43,6 +43,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javafx.scene.input.MouseEvent;
+import org.springframework.core.env.Environment;
 
 /**
  * FXML Controller class
@@ -81,6 +83,9 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
     @Autowired
     private PackageService packages;
+    
+    @Autowired
+    private Environment env;
 
     private DownloadScheduler downScheduler;
 
@@ -281,6 +286,21 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     }
 
     @FXML
+    final void showAboutBox(ActionEvent evt) {
+        Parent parent = (Parent) viewLoader.load(Views.ABOUT_BOX);
+        Window owner = ((Node) evt.getTarget()).getScene().getWindow();
+        Scene scene = new Scene(parent);       
+        Stage stage = new Stage();
+        stage.setTitle(messages.getMessage("aboutBox.title", env.getProperty("app.title")));
+        stage.getIcons().add(Views.APP_ICON);
+        stage.setResizable(false);        
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initOwner(owner);
+        stage.setScene(scene);         
+        stage.showAndWait();       
+    }
+
+    @FXML
     final void exit(ActionEvent evt) {
         Window window = ((Node) evt.getTarget()).getScene().getWindow();
         close(window);
@@ -304,10 +324,11 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         bindings.put("model", model);
         bindings.put("acceptAction", open);
         bindings.put("viewMode", mode);
-        Parent parent = (Parent) viewLoader.load(Views.EDIT_REPOSITORY, bindings);
+        Parent parent = (Parent) viewLoader.load(Views.EDIT_REPOSITORY, Optional.of(bindings));
         Scene scene = new Scene(parent);
         Stage stage = new Stage();
-        stage.setTitle(title);
+        stage.getIcons().add(Views.APP_ICON);
+        stage.setTitle(title);        
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(owner);
         stage.setScene(scene);

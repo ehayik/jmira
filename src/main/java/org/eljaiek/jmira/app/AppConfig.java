@@ -15,6 +15,8 @@ import org.eljaiek.jmira.core.impl.HttpDownloadResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
@@ -25,12 +27,13 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 @ComponentScan({"org.eljaiek.jmira.app",
     "org.eljaiek.jmira.core",
     "org.eljaiek.jmira.data.repositories.impl"})
+@PropertySource("classpath:application.properties")        
 class AppConfig {
 
     @PostConstruct
     public void registerDownloadResolvers() {
         DownloadBuilder.register("http", new HttpDownloadResolver());
-        DownloadBuilder.register("file", new FileDownloadResolver());        
+        DownloadBuilder.register("file", new FileDownloadResolver());
     }
 
     @Bean
@@ -39,6 +42,7 @@ class AppConfig {
         resources.put(Views.EDIT_REPOSITORY, "org.eljaiek.jmira.app.view.resources.editRepository");
         resources.put(Views.HOME, "org.eljaiek.jmira.app.view.resources.home");
         resources.put(Views.EDIT_SOURCE, "org.eljaiek.jmira.app.view.resources.editSource");
+        resources.put(Views.ABOUT_BOX, "org.eljaiek.jmira.app.view.resources.aboutBox");
         return new ViewLoader(resources);
     }
 
@@ -48,6 +52,11 @@ class AppConfig {
         om.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
         om.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
         return om;
+    }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
     }
 
     @Bean

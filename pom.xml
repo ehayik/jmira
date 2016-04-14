@@ -20,9 +20,9 @@
         <jackson.version>2.6.4</jackson.version>
         <validator.version>1.4.1</validator.version>
         <io.version>2.4</io.version> 
-        <spring.version>4.2.4.RELEASE</spring.version>
+        <spring.version>4.2.5.RELEASE</spring.version>
         <lang.version>2.6</lang.version>
-        <guava.version>18.0</guava.version>
+<!--        <guava.version>18.0</guava.version>-->
     </properties>
 
     <organization>      
@@ -92,11 +92,11 @@
             <artifactId>commons-lang</artifactId>
             <version>${lang.version}</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.reactfx</groupId>
             <artifactId>reactfx</artifactId>

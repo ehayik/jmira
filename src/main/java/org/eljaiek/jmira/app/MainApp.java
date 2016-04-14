@@ -12,6 +12,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 
 @Component
 public class MainApp extends Application {
@@ -19,6 +21,8 @@ public class MainApp extends Application {
     private static ViewLoader VIEW_LOADER;
 
     private static CloseRequestHandler CLOSE_HANDLER;
+    
+    private static Environment ENV;
 
     /**
      * The main() method is ignored in correctly deployed JavaFX application.
@@ -33,14 +37,16 @@ public class MainApp extends Application {
         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
         VIEW_LOADER = context.getBean(ViewLoader.class);
         CLOSE_HANDLER = context.getBean(CloseRequestHandler.class);
+        ENV = context.getBean(Environment.class);
         launch(args);
     }
 
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = (Parent) VIEW_LOADER.load(Views.HOME);
-        Scene scene = new Scene(root);
-        stage.setTitle("JMira 1.0");
+        Scene scene = new Scene(root);       
+        stage.getIcons().add(Views.APP_ICON);
+        stage.setTitle(String.join(" ", ENV.getProperty("app.title"), ENV.getProperty("app.version")));
         stage.setScene(scene);
         stage.setOnCloseRequest(evt -> CLOSE_HANDLER.close(stage));
         stage.show();

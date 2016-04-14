@@ -198,9 +198,10 @@ public class EditRepositoryController implements Initializable {
         Window window = ((Node) event.getTarget()).getScene().getWindow();
         Map<String, Object> bindings = new HashMap<>(1);
         bindings.put("model", sourcesListView.getSelectionModel().getSelectedItem());
-        Parent parent = (Parent) viewLoader.load(Views.EDIT_SOURCE, bindings);
+        Parent parent = (Parent) viewLoader.load(Views.EDIT_SOURCE, Optional.of(bindings));
         Scene scene = new Scene(parent);
         Stage stage = new Stage();
+        stage.getIcons().add(Views.APP_ICON);
         stage.setTitle(messages.getMessage("editSourceDialog.title"));
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(window);

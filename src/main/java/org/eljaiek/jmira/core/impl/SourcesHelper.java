@@ -122,10 +122,7 @@ final class SourcesHelper {
                         .url(String.join(SLASH, remote, PACKAGES_BZ2))
                         .localFolder(local.getAbsolutePath())
                         .get().run();
-                
-                LOG.debug("Downloaded File: " + String.join(SLASH, remote, PACKAGES_BZ2));
 
-               // String pkgFile = String.join(SLASH, local.getAbsolutePath(), PACKAGES);
                 File file = Files.createTempFile(UUID.randomUUID().toString(), null).toFile();
                 InputStream inputStream = new FileInputStream(String.join(SLASH, local.getAbsolutePath(), PACKAGES_BZ2));
                 IOUtils.copy(new BZip2InputStream(inputStream, false), new FileOutputStream(file));

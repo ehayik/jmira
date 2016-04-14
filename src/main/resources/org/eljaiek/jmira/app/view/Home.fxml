@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.text.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<VBox prefHeight="435.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.eljaiek.jmira.app.controller.HomeController">
+<VBox prefHeight="435.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.eljaiek.jmira.app.controller.HomeController">
     <children>
         <BorderPane fx:id="mainPane" maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
             <top>
                 <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <items>
-                        <Button mnemonicParsing="false" onAction="#exit">
+                        <Button accessibleText="Exit application" mnemonicParsing="false" onAction="#exit">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/exit48.png" />
                                 </ImageView>
                             </graphic>
+                            <tooltip>
+                                <Tooltip text="Exit" />
+                            </tooltip>
                         </Button>
                         <Separator orientation="VERTICAL" prefHeight="10.0" />                       
                         <Button fx:id="openBtn" mnemonicParsing="false" onAction="#openRepository" prefHeight="50.0" prefWidth="50.0">
@@ -26,6 +38,9 @@
                                     <Image url="@resources/icons/openRepo48.png" />
                                 </ImageView>
                             </graphic>
+                            <tooltip>
+                                <Tooltip text="Open repository managed by JMira" />
+                            </tooltip>
                         </Button>
                         <Button fx:id="newBtn" mnemonicParsing="false" onAction="#newRepository">
                             <graphic>
@@ -40,6 +55,9 @@
                                     <Image url="@resources/icons/editRepo48.png" />
                                 </ImageView>
                             </graphic>
+                            <tooltip>
+                                <Tooltip text="Edit repository information" />
+                            </tooltip>
                         </Button>
                         <Separator orientation="VERTICAL" prefHeight="10.0" />
                         <Button fx:id="syncBtn" disable="true" mnemonicParsing="false" onAction="#synchronize">
@@ -48,6 +66,9 @@
                                     <Image url="@resources/icons/updateRepo48.png" />
                                 </ImageView>
                             </graphic>
+                            <tooltip>
+                                <Tooltip text="Synchronize repository with available software sources" />
+                            </tooltip>
                         </Button>
                         <Button fx:id="downBtn" disable="true" mnemonicParsing="false" onAction="#startDownload">
                             <graphic>
@@ -55,23 +76,25 @@
                                     <Image url="@resources/icons/downloadRepo48.png" />
                                 </ImageView>
                             </graphic>
+                            <tooltip>
+                                <Tooltip text="Start packages download" />
+                            </tooltip>
                         </Button>
                         <Separator layoutX="300.0" layoutY="10.0" orientation="VERTICAL" prefHeight="10.0" />
-                        <Button mnemonicParsing="false">
+                        <Button mnemonicParsing="false" onAction="#showAboutBox" >
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/helpAbout48.png" />
                                 </ImageView>
                             </graphic>
-                        </Button>
-                         <Button mnemonicParsing="false">
-                            <graphic>
-                                <ImageView>
-                                    <Image url="@resources/icons/helpFaq48.png" />
-                                </ImageView>
-                            </graphic>
+                            <tooltip>
+                                <Tooltip text="About" />
+                            </tooltip>
                         </Button>
                     </items>
+                    <tooltip>
+                        <Tooltip text="Create a new repository with JMira" />
+                    </tooltip>
                 </ToolBar>
             </top>
             <bottom>
@@ -90,37 +113,37 @@
                             </image>
                         </ImageView>
                         <ProgressBar fx:id="downIndicator" prefHeight="17.0" prefWidth="84.0" progress="0.0" />
-                  <Label fx:id="repoInfoLabel" text="Available Packages:" textFill="#0b4ced" visible="${controller.visibleLabels}">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <padding>
-                        <Insets left="10.0" />
-                     </padding>
-                  </Label>
-                  <Label fx:id="availablePackages" layoutX="270.0" layoutY="18.0" text="0" visible="${controller.visibleLabels}" />
-                  <Label fx:id="repoInfoLabel1" layoutX="270.0" layoutY="18.0" text="Downloaded Packages:" textFill="#0b4ced" visible="${controller.visibleLabels}">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <padding>
-                        <Insets left="10.0" />
-                     </padding>
-                  </Label>
-                  <Label fx:id="downPackages" layoutX="395.0" layoutY="18.0" text="0" visible="${controller.visibleLabels}" />
+                        <Label fx:id="repoInfoLabel" text="Available Packages:" textFill="#0b4ced" visible="${controller.visibleLabels}">
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                            <padding>
+                                <Insets left="10.0" />
+                            </padding>
+                        </Label>
+                        <Label fx:id="availablePackages" layoutX="270.0" layoutY="18.0" text="0" visible="${controller.visibleLabels}" />
+                        <Label fx:id="repoInfoLabel1" layoutX="270.0" layoutY="18.0" text="Downloaded Packages:" textFill="#0b4ced" visible="${controller.visibleLabels}">
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                            <padding>
+                                <Insets left="10.0" />
+                            </padding>
+                        </Label>
+                        <Label fx:id="downPackages" layoutX="395.0" layoutY="18.0" text="0" visible="${controller.visibleLabels}" />
                     </items>
                 </ToolBar>
             </bottom>
-         <center>
-            <BorderPane fx:id="listViewPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-               <center>
-                   <ListView fx:id="packagesListView" prefHeight="260.0" prefWidth="702.0" BorderPane.alignment="CENTER" />
-               </center>
-               <bottom>
-                  <Pagination fx:id="pagination" prefHeight="52.0" prefWidth="702.0" BorderPane.alignment="CENTER" />
-               </bottom>
-            </BorderPane>
-         </center>
+            <center>
+                <BorderPane fx:id="listViewPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <center>
+                        <ListView fx:id="packagesListView" prefHeight="260.0" prefWidth="702.0" BorderPane.alignment="CENTER" />
+                    </center>
+                    <bottom>
+                        <Pagination fx:id="pagination" prefHeight="52.0" prefWidth="702.0" BorderPane.alignment="CENTER" />
+                    </bottom>
+                </BorderPane>
+            </center>
         </BorderPane>
     </children>
 </VBox>

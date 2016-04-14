@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.app.view;
 
-import com.google.common.collect.Lists;
 import org.eljaiek.jmira.core.MessageResolver;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -40,19 +39,26 @@ public final class ViewLoader implements ApplicationContextAware {
     }
 
     public final Object load(String url) {
-        return load(url, null);
+        return load(url, Optional.ofNullable(null));
     }
 
-    public final Object load(String url, Map<String, Object> bindings) {
+    public final Object load(String url, Optional<Map<String, Object>> bindings) {
 
         try {
-            ResourceBundle resourceBundle = ResourceBundle.getBundle(resources.get(url));
+            ResourceBundle resourceBundle = null;            
+            
+            try {
+                resourceBundle = ResourceBundle.getBundle(resources.get(url));
+            } catch (NullPointerException ex) {
+                LOG.error(ex.getMessage(), ex);
+            }
+           
             FXMLLoader loader = new FXMLLoader(ViewLoader.class.getResource(url), resourceBundle);
             loader.setControllerFactory(param -> context.getBean(param));
             Object view = loader.load();
 
-            if (bindings != null) {
-                bindModel(bindings, loader.getController());
+            if (bindings.isPresent()) {
+                bindModel(bindings.get(), loader.getController());
             }
 
             return view;
@@ -64,8 +70,8 @@ public final class ViewLoader implements ApplicationContextAware {
     private <T> void bindModel(Map<String, Object> bindings, T controller) {
 
         bindings.forEach((String key, Object value) -> {
-            boolean bonded; 
-            Optional<Field> field = Lists.newArrayList(controller.getClass().getDeclaredFields())
+            boolean bonded;  
+            Optional<Field> field = Arrays.asList(controller.getClass().getDeclaredFields())
                     .stream()
                     .filter(f -> {
                         ViewModel vb = f.getAnnotation(ViewModel.class);
@@ -100,7 +106,7 @@ public final class ViewLoader implements ApplicationContextAware {
 
     private static <T> boolean bindToMethod(String key, T controller, Object value) {
         boolean bonded = false;
-        Optional<Method> method = Lists.newArrayList(controller.getClass().getMethods())
+        Optional<Method> method = Arrays.asList(controller.getClass().getMethods())
                 .stream()
                 .filter(m -> {
                     ViewModel vb = m.getAnnotation(ViewModel.class);
