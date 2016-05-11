@@ -15,15 +15,15 @@ public interface PackageRepository {
     
     List<DebPackage> findAll(int start, int limit);
     
-    List<DebPackage> findNotDownloaded();
+    List<DebPackage> findIdles();
 
     void removeAll();
     
     int count();
     
-    int countDownloaded();
+    int downloads();
     
     long size();
     
-    long downloaded();
+    long downloadsSize();
 }

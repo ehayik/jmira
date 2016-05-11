@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.download;
 
 import org.eljaiek.jmira.core.Download;
 
@@ -42,5 +42,9 @@ final class DownloadModel {
 
     public void cancel() {
         download.cancel();
+        
+//        if (download.getSize() != download.getDownloaded()) {
+//            download.clean();
+//        }        
     }
 }

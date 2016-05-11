@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.model;
+package org.eljaiek.jmira.app.controller;
 
 import java.io.File;
 import javafx.beans.property.LongProperty;
@@ -7,14 +7,14 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import org.eljaiek.jmira.core.util.ValidationUtils;
+import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
 
 /**
  *
  * @author eduardo.eljaiek
  */
-public class PackageModel {
+ class PackageModel {
 
     public enum Status {
         AVAILABLE, DOWNLOADED, CORRUPTED
@@ -82,6 +82,6 @@ public class PackageModel {
             status = Status.CORRUPTED;
         }
 
-        return new PackageModel(debPackage.getName(), debPackage.getSize(), status);
+        return new PackageModel(debPackage.getName(), debPackage.getLength(), status);
     }
 }

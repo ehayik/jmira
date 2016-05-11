@@ -28,7 +28,7 @@ public final class FileSystemHelper {
             float value = ((float) bytes / (float) gigabyte);
             format = formatter.format(value) + " GB";
         } else if (bytes > megabyte) {
-            float value = ((float) bytes / (float) megabyte);
+            float value = ((float) bytes / (float) megabyte);                           
             format = formatter.format(value) + " MB";
         } else if ((bytes > kilobyte)) {
             float value = ((float) bytes / (float) kilobyte);

@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Controller;
  *
  * @author eduardo.eljaiek
  */
+@Lazy
 @Controller
 public class AboutBoxController implements Initializable {
 

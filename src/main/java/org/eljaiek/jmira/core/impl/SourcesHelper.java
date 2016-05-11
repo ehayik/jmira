@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
 import static org.eljaiek.jmira.core.DebianNamesUtils.DISTS_FOLDER;
-import static org.eljaiek.jmira.core.DebianNamesUtils.PACKAGES;
 import static org.eljaiek.jmira.core.DebianNamesUtils.PACKAGES_BZ2;
 import static org.eljaiek.jmira.core.DebianNamesUtils.PACKAGES_GZ;
 import static org.eljaiek.jmira.core.DebianNamesUtils.RELEASE;

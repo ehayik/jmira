@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.core.util;
+package org.eljaiek.jmira.app.util;
 
 import java.io.File;
 import java.io.FileInputStream;

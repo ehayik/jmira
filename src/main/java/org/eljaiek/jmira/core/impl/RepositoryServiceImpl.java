@@ -2,7 +2,7 @@ package org.eljaiek.jmira.core.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eljaiek.jmira.core.MessageResolver;
-import org.eljaiek.jmira.core.PackageScanner;
+import org.eljaiek.jmira.core.scanner.PackageScanner;
 import org.eljaiek.jmira.core.RepositoryAccessException;
 import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.function.LongConsumer;
 
 import static org.eljaiek.jmira.core.NamesUtils.SETTINGS_JSON;
+import org.eljaiek.jmira.core.scanner.PackageList;
+import org.eljaiek.jmira.core.scanner.ScannerConfiguration;
 
 /**
  * @author eduardo.eljaiek
@@ -76,33 +78,43 @@ public final class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public final void synchronize(Repository repository, LongConsumer progress) {
+    public final Status synchronize(Repository repository, LongConsumer progress) {
+        final Status status = new Status(); 
         Optional<LongConsumer> consumer = Optional.ofNullable(progress);
         Progress.reset(repository.getSources().size());
-        List<SourcesHelper.SourceFiles> sfs = SourcesHelper.download(repository);
-        repository.setDownloadedCount(0);
-        repository.setDownloadedSize(0);
-        repository.setSize(0);
-        repository.setPackagesCount(0);
+        List<SourcesHelper.SourceFiles> sfs = SourcesHelper.download(repository);       
         packages.removeAll();
 
         sfs.forEach(sf -> sf.stream().forEach(f -> {
             String localHome = String.join("/", repository.getHome(), sf.getFolderName());
-
-            try (PackageScanner scanner = new PackageScanner(f, localHome, sf.getUrl())) {
-                PackageScanner.PackageList packageList = scanner.list();
+            ScannerConfiguration config = new ScannerConfiguration(false, localHome, sf.getUrl());
+            
+            try (PackageScanner scanner = new PackageScanner(f, config)) {
+                PackageList packageList = scanner.list();
                 packages.saveAll(packageList.getPackages());
-                repository.setPackagesCount(repository.getPackagesCount() + packageList.getCount());
-                repository.setSize(repository.getSize() + packageList.getSize());
-                repository.setDownloadedSize(repository.getDownloadedSize() + packageList.getDownloaded());
-                repository.setDownloadedCount(repository.getDownloadedCount() + packageList.getDownloadedCount());
+                status.addAvailable(packageList.getAvailable());
+                status.addAvailableSize(packageList.getAvailableSize());
+                status.addDownloadsSize(packageList.getDownloadsSize());
+                status.addDownloads(packageList.getDownloads());                        
                 consumer.orElse(DEF_CONSUMER).accept(Progress.update());
             } catch (FileNotFoundException ex) {
                 throw new RuntimeException(ex);
             }
         }));
+        
+        return status;
     }
 
+    @Override
+    public Status refresh(Repository repository) {
+        Status status = new Status();
+        status.addAvailable(packages.count());
+        status.addAvailableSize(packages.size());
+        status.addDownloadsSize(packages.downloadsSize());
+        status.addDownloads(packages.downloads());
+        return status;
+    }
+            
     private static final class Progress {
 
         private static int total;

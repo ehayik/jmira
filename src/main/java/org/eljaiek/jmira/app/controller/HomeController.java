@@ -1,5 +1,8 @@
 package org.eljaiek.jmira.app.controller;
 
+import org.eljaiek.jmira.app.events.CloseRequestHandler;
+import org.eljaiek.jmira.app.download.DownloadScheduler;
+import org.eljaiek.jmira.app.download.DownloadFailEvent;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -17,10 +20,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.*;
-import org.eljaiek.jmira.app.controller.util.*;
-import org.eljaiek.jmira.app.model.PackageModel;
-import org.eljaiek.jmira.app.model.RepositoryModel;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.eljaiek.jmira.app.util.AlertHelper;
 import org.eljaiek.jmira.app.util.FileSystemHelper;
 import org.eljaiek.jmira.app.view.ViewLoader;
@@ -34,6 +37,7 @@ import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
@@ -43,8 +47,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javafx.scene.input.MouseEvent;
-import org.springframework.core.env.Environment;
 
 /**
  * FXML Controller class
@@ -70,7 +72,9 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
     private final ImageView cancelDownloadIcon;
 
-    private final BooleanProperty visibleLabels = new SimpleBooleanProperty(false);
+    private final BooleanProperty visibleRepoStatus = new SimpleBooleanProperty(false);
+
+    private final BooleanProperty visibleDownStatus = new SimpleBooleanProperty(false);
 
     @Autowired
     private ViewLoader viewLoader;
@@ -83,7 +87,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
     @Autowired
     private PackageService packages;
-    
+
     @Autowired
     private Environment env;
 
@@ -115,6 +119,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
     @FXML
     private Button syncBtn;
+
     @FXML
     private Button downBtn;
 
@@ -122,10 +127,13 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     private Pagination pagination;
 
     @FXML
-    private Label availablePackages;
+    private Label availableCount;
 
     @FXML
-    private Label downPackages;
+    private Label successCount;
+
+    @FXML
+    private Label errorsCount;
 
     private RepositoryModel current;
 
@@ -142,16 +150,28 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         };
     }
 
-    public boolean isVisibleLabels() {
-        return visibleLabels.get();
+    public boolean isVisibleRepoStatus() {
+        return visibleRepoStatus.get();
     }
 
-    public void setVisibleLabels(boolean value) {
-        visibleLabels.set(value);
+    public void setVisibleRepoStatus(boolean value) {
+        visibleRepoStatus.set(value);
     }
 
-    public BooleanProperty visibleLabelsProperty() {
-        return visibleLabels;
+    public BooleanProperty visibleRepoStatusProperty() {
+        return visibleRepoStatus;
+    }
+
+    public boolean isVisibleDownStatus() {
+        return visibleDownStatus.get();
+    }
+
+    public void setVisibleDownStatus(boolean value) {
+        visibleDownStatus.set(value);
+    }
+
+    public BooleanProperty visibleDownStatusProperty() {
+        return visibleDownStatus;
     }
 
     /**
@@ -177,6 +197,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
             downBtn.setGraphic(startDownloadIcon);
             downBtn.setOnAction(this::startDownload);
             disabledOnDownload(false);
+            visibleDownStatus.set(false);
             ObservableList<PackageModel> page = paginationHelper.createPage();
             packagesListView.setItems(page);
         };
@@ -232,7 +253,14 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
                 AlertHelper.error(window, messages.getMessage("repository.open.errorHeader"), error, service.getException());
             });
 
-            service.setOnOpen(evt -> current = evt.getModel());
+            service.setOnOpen(evt -> {
+                current = evt.getModel();
+                RepositoryService.Status status = repositories.refresh(current.getRepository());
+                current.setAvailable(status.getAvailable());
+                current.setAvailableSize(status.getAvailableSize());
+                current.setDownloads(status.getDownloads());
+                current.setDownloadsSize(status.getDownloadsSize());
+            });
 
             AlertHelper.progress(messages.getMessage("repository.open.progressHeader"),
                     messages.getMessage("repository.open.progressContext"),
@@ -270,17 +298,18 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
     @FXML
     void startDownload(ActionEvent event) {
-        downScheduler.downloadedProperty().bindBidirectional(current.downloadedProperty());
-        downScheduler.downloadedCountProperty().bindBidirectional(current.downloadedCountProperty());
+        downScheduler.downloadedProperty().bindBidirectional(current.downloadsSizeProperty());
+        downScheduler.downloadedCountProperty().bindBidirectional(current.downloadsProperty());
         disabledOnDownload(true);
         downBtn.setDisable(true);
+        visibleDownStatus.set(true);
         mainPane.getChildren().remove(listViewPane);
         mainPane.setCenter(downScheduler.getControl());
         downScheduler.start();
 
         File f = new File(current.getHome());
 
-        if (f.getFreeSpace() < current.getSize() - current.getDownloaded()) {
+        if (f.getFreeSpace() < current.getAvailableSize() - current.getDownloadsSize()) {
             LOG.warn(messages.getMessage("diskSpace.warn", current.getHome()));
         }
     }
@@ -289,21 +318,21 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     final void showAboutBox(ActionEvent evt) {
         Parent parent = (Parent) viewLoader.load(Views.ABOUT_BOX);
         Window owner = ((Node) evt.getTarget()).getScene().getWindow();
-        Scene scene = new Scene(parent);       
+        Scene scene = new Scene(parent);
         Stage stage = new Stage();
         stage.setTitle(messages.getMessage("aboutBox.title", env.getProperty("app.title")));
         stage.getIcons().add(Views.APP_ICON);
-        stage.setResizable(false);        
+        stage.setResizable(false);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(owner);
-        stage.setScene(scene);         
-        stage.showAndWait();       
+        stage.setScene(scene);
+        stage.showAndWait();
     }
 
     @FXML
     final void exit(ActionEvent evt) {
         Window window = ((Node) evt.getTarget()).getScene().getWindow();
-        close(window);
+        onClose(window);
     }
 
     private void disableOnOpen(boolean disable) {
@@ -328,7 +357,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         Scene scene = new Scene(parent);
         Stage stage = new Stage();
         stage.getIcons().add(Views.APP_ICON);
-        stage.setTitle(title);        
+        stage.setTitle(title);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(owner);
         stage.setScene(scene);
@@ -352,27 +381,27 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         pagination.setCurrentPageIndex(0);
         packagesListView.setItems(paginationHelper.createPage());
 
-        if (current.getPackagesCount() > paginationHelper.pageSize) {
+        if (current.getAvailable() > paginationHelper.pageSize) {
             listViewPane.setBottom(pagination);
         } else {
             listViewPane.getChildren().remove(pagination);
         }
 
-        visibleLabels.set(true);
+        visibleRepoStatus.set(true);
         updateToolBar();
         timer.restart();
     }
 
     private void updateToolBar() {
-        visibleLabels.set(true);
-        availablePackages.setText(NUMBER_FORMAT.format(current.getPackagesCount()));
-        downPackages.setText(NUMBER_FORMAT.format(current.getDownloadedCount()));
-
+        visibleRepoStatus.set(true);
+        availableCount.setText(NUMBER_FORMAT.format(current.getAvailable()));
+        successCount.setText(NUMBER_FORMAT.format(current.getDownloads()));
+        errorsCount.setText(NUMBER_FORMAT.format(downScheduler.getErrors()));
         double percent = FileSystemHelper.getUsedSpacePercent(current.getHome());
         homeIndicator.setProgress(percent * 0.01);
 
-        if (current.getDownloaded() != 0) {
-            double downPercent = current.getDownloaded() * 100 / current.getSize();
+        if (current.getDownloadsSize() != 0) {
+            double downPercent = current.getDownloadsSize() * 100 / current.getAvailableSize();
             downIndicator.setProgress(downPercent * 0.1);
         }
     }
@@ -389,7 +418,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     }
 
     @Override
-    public void close(Window window) {
+    public void onClose(Window window) {
         try {
 
             if (current != null) {
@@ -424,7 +453,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         }
 
         public int getPageCount() {
-            return current.getPackagesCount() / pageSize;
+            return current.getAvailable() / pageSize;
         }
 
         public ObservableList<PackageModel> createPage() {

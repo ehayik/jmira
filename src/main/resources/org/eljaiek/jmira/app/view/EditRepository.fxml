@@ -41,7 +41,7 @@
                                         <Insets left="10.0" top="10.0" />
                                     </VBox.margin>
                                 </Label>
-                                <CheckComboBox fx:id="archsComboBox" prefHeight="25.0" prefWidth="92.0">
+                                <CheckComboBox fx:id="archsComboBox" prefHeight="25.0" prefWidth="150.0">
                                     <VBox.margin>
                                         <Insets left="10.0" top="5.0" />
                                     </VBox.margin>
@@ -66,7 +66,7 @@
                                                 <Insets left="5.0" top="2.0" />
                                             </HBox.margin>
                                         </Button>
-                                        <Button disable="${controller.noSelection}" mnemonicParsing="false" onAction="#deleteAction" prefWidth="60.0" text="Delete">
+                                        <Button disable="${controller.noSelection}" mnemonicParsing="false" onAction="#deleteAction" prefWidth="75.0" text="Delete">
                                             <HBox.margin>
                                                 <Insets left="5.0" top="2.0" />
                                             </HBox.margin>

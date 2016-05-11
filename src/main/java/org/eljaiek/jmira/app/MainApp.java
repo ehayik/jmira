@@ -4,7 +4,7 @@ import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.eljaiek.jmira.app.controller.util.CloseRequestHandler;
+import org.eljaiek.jmira.app.events.CloseRequestHandler;
 import org.eljaiek.jmira.app.view.ViewLoader;
 import org.eljaiek.jmira.app.view.Views;
 import org.springframework.context.ApplicationContext;
@@ -12,7 +12,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 
 @Component
@@ -21,7 +20,7 @@ public class MainApp extends Application {
     private static ViewLoader VIEW_LOADER;
 
     private static CloseRequestHandler CLOSE_HANDLER;
-    
+
     private static Environment ENV;
 
     /**
@@ -44,11 +43,11 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = (Parent) VIEW_LOADER.load(Views.HOME);
-        Scene scene = new Scene(root);       
+        Scene scene = new Scene(root);
         stage.getIcons().add(Views.APP_ICON);
         stage.setTitle(String.join(" ", ENV.getProperty("app.title"), ENV.getProperty("app.version")));
         stage.setScene(scene);
-        stage.setOnCloseRequest(evt -> CLOSE_HANDLER.close(stage));
+        stage.setOnCloseRequest(evt -> CLOSE_HANDLER.onClose(stage));
         stage.show();
     }
 }

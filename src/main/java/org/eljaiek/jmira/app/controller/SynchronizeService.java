@@ -1,8 +1,7 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.controller;
 
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import org.eljaiek.jmira.app.model.RepositoryModel;
 import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
 
@@ -11,13 +10,13 @@ import org.eljaiek.jmira.data.model.Repository;
  *
  * @author eduardo.eljaiek
  */
-public final class SynchronizeService extends Service {
+final class SynchronizeService extends Service {
 
     private final RepositoryModel model;
 
     private final RepositoryService repositories;
 
-    public SynchronizeService(RepositoryModel repository, RepositoryService repositoryService/*, PackageService packageService*/) {
+    public SynchronizeService(RepositoryModel repository, RepositoryService repositoryService) {
         model = repository;
         repositories = repositoryService;
     }  
@@ -29,11 +28,11 @@ public final class SynchronizeService extends Service {
             @Override
             protected Void call() throws Exception {
                 Repository repository = model.getRepository();
-                repositories.synchronize(repository, (long value1) -> updateProgress(value1 / 0.01, 1));
-                model.setPackagesCount(repository.getPackagesCount());
-                model.setDownloadedCount(repository.getDownloadedCount());
-                model.setSize(repository.getSize());
-                model.setDownloaded(repository.getDownloadedSize());
+                RepositoryService.Status status = repositories.synchronize(repository, (long value1) -> updateProgress(value1 / 0.01, 1));
+                model.setAvailable(status.getAvailable());
+                model.setDownloads(status.getDownloads());
+                model.setAvailableSize(status.getAvailableSize());
+                model.setDownloadsSize(status.getDownloadsSize());
                 return null;
             }
         };

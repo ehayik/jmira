@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.model;
+package org.eljaiek.jmira.app.controller;
 
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -14,19 +14,19 @@ import java.util.stream.Collectors;
  *
  * @author eduardo.eljaiek
  */
-public class RepositoryModel {
+class RepositoryModel {
 
     private final StringProperty name = new SimpleStringProperty();
 
     private final StringProperty home = new SimpleStringProperty();
 
-    private final IntegerProperty packagesCount = new SimpleIntegerProperty(0);
+    private final IntegerProperty available = new SimpleIntegerProperty(0);
 
-    private final IntegerProperty downloadedCount = new SimpleIntegerProperty(0);
+    private final IntegerProperty downloads = new SimpleIntegerProperty(0);
 
-    private final LongProperty downloaded = new SimpleLongProperty(0);
+    private final LongProperty downloadsSize = new SimpleLongProperty(0);
 
-    private final LongProperty size = new SimpleLongProperty(0);
+    private final LongProperty availableSize = new SimpleLongProperty(0);
 
     private final ListProperty<Architecture> architectures = new SimpleListProperty<>(FXCollections.emptyObservableList());
 
@@ -79,52 +79,52 @@ public class RepositoryModel {
         return home;
     }
 
-    public int getPackagesCount() {
-        return packagesCount.get();
+    public int getAvailable() {
+        return available.get();
     }
 
-    public void setPackagesCount(int value) {
-        packagesCount.set(value);
+    public void setAvailable(int value) {
+        available.set(value);
     }
 
-    public IntegerProperty packagesCountProperty() {
-        return packagesCount;
+    public IntegerProperty availableProperty() {
+        return available;
     }
 
-    public int getDownloadedCount() {
-        return downloadedCount.get();
+    public int getDownloads() {
+        return downloads.get();
     }
 
-    public void setDownloadedCount(int value) {
-        downloadedCount.set(value);
+    public void setDownloads(int value) {
+        downloads.set(value);
     }
 
-    public IntegerProperty downloadedCountProperty() {
-        return downloadedCount;
+    public IntegerProperty downloadsProperty() {
+        return downloads;
     }
 
-    public long getDownloaded() {
-        return downloaded.get();
+    public long getDownloadsSize() {
+        return downloadsSize.get();
     }
 
-    public LongProperty downloadedProperty() {
-        return downloaded;
+    public LongProperty downloadsSizeProperty() {
+        return downloadsSize;
     }
 
-    public void setDownloaded(long downloaded) {
-        this.downloaded.set(downloaded);
+    public void setDownloadsSize(long downloaded) {
+        this.downloadsSize.set(downloaded);
     }
 
-    public long getSize() {
-        return size.get();
+    public long getAvailableSize() {
+        return availableSize.get();
     }
 
-    public LongProperty sizeProperty() {
-        return size;
+    public LongProperty availableSizeProperty() {
+        return availableSize;
     }
 
-    public void setSize(long size) {
-        this.size.set(size);
+    public void setAvailableSize(long size) {
+        this.availableSize.set(size);
     }
 
     public void setArchitectures(ObservableList<Architecture> value) {
@@ -156,11 +156,7 @@ public class RepositoryModel {
     public Repository getRepository() {
         Repository to = new Repository();
         to.setName(getName());
-        to.setHome(getHome());
-        to.setPackagesCount(getPackagesCount());
-        to.setDownloadedCount(getDownloadedCount());
-        to.setSize(getSize());
-        to.setDownloadedSize(getDownloaded());
+        to.setHome(getHome()); 
         to.setArchitectures(getArchitectures().stream().collect(Collectors.toList()));
         to.setSources(getSources().stream().map(src -> src.getSource()).collect(Collectors.toList()));
         return to;
@@ -170,10 +166,6 @@ public class RepositoryModel {
         RepositoryModel model = new RepositoryModel();
         model.setName(repository.getName());
         model.setHome(repository.getHome());
-        model.setPackagesCount(repository.getPackagesCount());
-        model.setDownloadedCount(repository.getDownloadedCount());
-        model.setSize(repository.getSize());
-        model.setDownloaded(repository.getDownloadedSize());
         model.setArchitectures(FXCollections
                 .observableArrayList(repository
                         .getArchitectures()

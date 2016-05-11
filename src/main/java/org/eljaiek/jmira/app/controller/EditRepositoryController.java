@@ -21,8 +21,6 @@ import org.controlsfx.validation.Severity;
 import org.controlsfx.validation.ValidationResult;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
-import org.eljaiek.jmira.app.model.RepositoryModel;
-import org.eljaiek.jmira.app.model.SourceModel;
 import org.eljaiek.jmira.app.util.AlertHelper;
 import org.eljaiek.jmira.app.view.ViewLoader;
 import org.eljaiek.jmira.app.view.ViewMode;
@@ -46,12 +44,14 @@ import java.util.ResourceBundle;
 import java.util.function.Function;
 
 import static org.eljaiek.jmira.core.NamesUtils.SETTINGS_JSON;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * FXML Controller class
  *
  * @author eduardo.eljaiek
  */
+@Lazy
 @Controller
 public class EditRepositoryController implements Initializable {
 

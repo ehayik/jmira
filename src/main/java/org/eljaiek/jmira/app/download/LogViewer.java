@@ -1,10 +1,10 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.download;
 
 import org.eljaiek.jmira.core.LogHandler;
 import javafx.application.Platform;
 import org.fxmisc.richtext.InlineCssTextArea;
 
- final class LogViewer extends InlineCssTextArea implements LogHandler {
+final class LogViewer extends InlineCssTextArea implements LogHandler {
 
     private static final String ERROR_STYLE = "-fx-fill: red";
 

@@ -1,6 +1,5 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.download;
 
-import org.eljaiek.jmira.app.model.DownloadModel;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -22,6 +21,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import org.eljaiek.jmira.app.util.SettingsHelper;
+import static org.eljaiek.jmira.app.util.SettingsHelper.THREADS_NUMBER;
+import static org.eljaiek.jmira.app.util.SettingsHelper.USE_CHECKSUM;
 
 /**
  * Created by eduardo.eljaiek on 12/4/2015.
@@ -42,11 +44,13 @@ public final class DownloadScheduler {
 
     private final LogViewer logViewer;
 
+    private final IntegerProperty errors;
+
     private final IntegerProperty downloadedCount;
 
     private final LongProperty downloaded;
 
-    private final Queue<Task<Void>> tasks;
+  //  private final Queue<Task<Void>> tasks;
 
     private final PackageService packageService;
 
@@ -64,10 +68,11 @@ public final class DownloadScheduler {
 
     public DownloadScheduler(PackageService packageService) {
         this.packageService = packageService;
-        downloadedCount = new SimpleIntegerProperty(0);
-        downloaded = new SimpleLongProperty(0);
+        downloadedCount = new SimpleIntegerProperty();
+        errors = new SimpleIntegerProperty();
+        downloaded = new SimpleLongProperty();
         queue = new ConcurrentLinkedQueue<>();
-        tasks = new ConcurrentLinkedQueue<>();
+      //  tasks = new ConcurrentLinkedQueue<>();
         progressView = new TaskProgressView<>();
         logViewer = new LogViewer();
         container = new SplitPane(progressView, logViewer);
@@ -78,28 +83,47 @@ public final class DownloadScheduler {
         return container;
     }
 
-    public IntegerProperty downloadedCountProperty() { return downloadedCount; }
+    public int getDownloadedCount() {
+        return downloadedCount.get();
+    }
+
+    public IntegerProperty downloadedCountProperty() {
+        return downloadedCount;
+    }
+
+    public long getDownloaded() {
+        return downloaded.get();
+    }
 
     public LongProperty downloadedProperty() {
         return downloaded;
     }
 
+    public int getErrors() {
+        return errorsProperty().get();
+    }
+
+    public IntegerProperty errorsProperty() {
+        return errors;
+    }
+
     public final void cancel() {
         stopDownloads = true;
-        tasks.forEach(task -> task.cancel(true));
+        progressView.getTasks().forEach(task -> ((DownloadTask) task).cancel(true) );
+      //  tasks.forEach(task -> task.cancel(true));
         pool.shutdown();
         fireCancelledEvent();
     }
 
     public final void start() {
         LogbackAppenderAdapter.register(APPENDER_NAME, logViewer);
-        pool = Executors.newWorkStealingPool();
+        int threads = SettingsHelper.getInt(THREADS_NUMBER);
+        pool = Executors.newFixedThreadPool(threads);
         Task<Void> task = new SearchTask();
 
         task.setOnSucceeded(evt -> {
             fireLoadSucceeded();
-            int processors = Runtime.getRuntime().availableProcessors();
-            List<DownloadModel> downloads = createDownloads(processors);
+            List<DownloadModel> downloads = createDownloads(threads);
 
             if (downloads.isEmpty()) {
                 fireDoneEvent();
@@ -109,9 +133,12 @@ public final class DownloadScheduler {
             downloads.forEach(this::start);
         });
 
-        task.setOnFailed(evt -> fireFailEvent(
-                new DownloadException(MessageResolver.getDefault()
-                        .getMessage("download.process.fail", task.getException().getMessage()), task.getException())));
+        task.setOnFailed(evt -> {
+            String msg = MessageResolver.getDefault()
+                         .getMessage("download.process.fail", 
+                                 task.getException().getMessage());
+            fireFailEvent( new DownloadException(msg));                        
+        });
 
         start(task);
     }
@@ -135,7 +162,9 @@ public final class DownloadScheduler {
 
                 return;
             }
-
+            
+          //  tasks.remove(task);
+          //  LOG.debug("size: " + tasks.size());
             List<DownloadModel> pack = createDownloads(1);
 
             if (pack.size() > 0) {
@@ -149,27 +178,28 @@ public final class DownloadScheduler {
     private void start(Task<Void> task) {
 
         try {
-            tasks.add(task);
+         //   tasks.add(task);
             progressView.getTasks().add(task);
             pool.submit(task);
         } catch (RejectedExecutionException ex) {
-            LOG.error(ex.getMessage(), ex);
+            LOG.error(ex.getMessage(), ex);            
         }
     }
 
-    private List<DownloadModel> createDownloads(int quantity) {
+    private List<DownloadModel> createDownloads(int threads) {
         int i = 0;
-        List<DownloadModel> downloads = new ArrayList<>(quantity);
+        List<DownloadModel> downloads = new ArrayList<>(threads);
 
-        while (i < quantity && i <= queue.size()) {
+        while (i < threads && i <= queue.size()) {
             DebPackage p = queue.poll();
             String localUrl = p.getLocalUrl();
             String folder = localUrl.substring(0, localUrl.lastIndexOf('/'));
             Download download = DownloadBuilder
                     .create()
                     .localFolder(folder).url(p.getRemoteUrl())
+                    .checksum(SettingsHelper.getBoolean(USE_CHECKSUM) ? p.getChecksum() : null)
                     .get();
-            downloads.add(new DownloadModel(p.getName(), p.getSize(), download));
+            downloads.add(new DownloadModel(p.getName(), p.getLength(), download));
             i++;
         }
 
@@ -200,11 +230,11 @@ public final class DownloadScheduler {
     }
 
     private void fireCancelledEvent() {
-         reset();
+        reset();
 
-         if (onCancelled != null) {
-             onCancelled.handle(new DownloadEvent(DownloadEvent.DOWN_CANCELLED));
-         }
+        if (onCancelled != null) {
+            onCancelled.handle(new DownloadEvent(DownloadEvent.DOWN_CANCELLED));
+        }
 
     }
 
@@ -213,7 +243,8 @@ public final class DownloadScheduler {
         logViewer.replaceText(0, logViewer.getText().length(), "");
         progressView.getTasks().clear();
         stopDownloads = false;
-        tasks.clear();
+        errors.set(0);
+      //  tasks.clear();
         queue.clear();
     }
 
@@ -274,6 +305,7 @@ public final class DownloadScheduler {
                         .getDefault()
                         .getMessage("download.task.fail",
                                 download.getPackageName(), ex.getMessage()));
+
             }
 
             return null;
@@ -282,8 +314,8 @@ public final class DownloadScheduler {
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
 
-            if (stopDownloads) {
-                download.cancel();
+            if (stopDownloads) {            
+                download.cancel();              
                 return super.cancel(mayInterruptIfRunning);
             }
 
@@ -309,6 +341,11 @@ public final class DownloadScheduler {
                 LOG.info(MessageResolver
                         .getDefault()
                         .getMessage("download.task.done", download.getPackageName()));
+            }
+            
+            if (DownloadStatus.ERROR == dn.getStatus()) {
+                DownloadScheduler.this.errors.add(1);
+               // dn.clean();
             }
         }
     }

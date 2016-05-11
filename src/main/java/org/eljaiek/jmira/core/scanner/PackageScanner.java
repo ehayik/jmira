@@ -1,11 +1,11 @@
-package org.eljaiek.jmira.core;
+package org.eljaiek.jmira.core.scanner;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import javax.xml.ws.WebServiceException;
-import org.eljaiek.jmira.core.util.ValidationUtils;
+import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
 
 /**
@@ -15,7 +15,7 @@ import org.eljaiek.jmira.data.model.DebPackage;
 public final class PackageScanner implements Iterator<DebPackage>, Closeable {
 
     public static final String CHAR_SET = "UTF8";
-    
+
     private static final String PACKAGE_TAG = "Package";
 
     private static final String DESCRIPTION_TAG = "Description";
@@ -25,24 +25,21 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
     private static final String VERSION_TAG = "Version";
 
     private static final String SIZE_TAG = "Size";
-    
+
     private static final String CHECKSUM_TAG = "MD5sum";
 
     private final Scanner scanner;
-    
-    private Optional<String> remoteHome = Optional.empty();
-    
-    private Optional<String> localHome = Optional.empty();
+
+    private final Optional<ScannerConfiguration> config;
 
     public PackageScanner(String packagesFile) throws FileNotFoundException {
-        scanner = new Scanner(new File(packagesFile), CHAR_SET);
+        this(packagesFile, null);
     }
 
-    public PackageScanner(String packagesFile, String localHome, String remoteHome) throws FileNotFoundException {
-        this(packagesFile);
-        this.localHome = Optional.of(localHome);
-        this.remoteHome = Optional.of(remoteHome);
-    }    
+    public PackageScanner(String packagesFile, ScannerConfiguration configuration) throws FileNotFoundException {
+        scanner = new Scanner(new File(packagesFile), CHAR_SET);
+        config = Optional.ofNullable(configuration);
+    }
 
     @Override
     public boolean hasNext() {
@@ -65,7 +62,7 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
 
                 case SIZE_TAG: {
                     long size = Long.parseLong(line.split(": ")[1]);
-                    pkg.setSize(size);
+                    pkg.setLength(size);
                 }
                 break;
 
@@ -83,7 +80,7 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
                     pkg.setDescription(line.split(": ")[1]);
                 }
                 break;
-                
+
                 case CHECKSUM_TAG: {
                     pkg.setChecksum(line.split(": ")[1]);
                 }
@@ -106,72 +103,40 @@ public final class PackageScanner implements Iterator<DebPackage>, Closeable {
     }
 
     public final PackageList list() {
-        int downloadedCount = 0;
-        long size = 0;
-        long downloaded = 0;
+        int downloads = 0;
+        long availableSize = 0;
+        long downloadsSize = 0;
         List<DebPackage> packages = new ArrayList<>();
+        String localHome = (config.isPresent()) ? config.get().getLocalHome() : null;
+        String remoteHome = (config.isPresent()) ? config.get().getRemoteHome() : null;
+        PackageValidator validator = config.get().getPackageValidator();
 
         while (hasNext()) {
             DebPackage pkg = next();
-            
-            if (localHome.isPresent()) {
-                pkg.setLocalUrl(String.join("/", localHome.get(), pkg.getRelativeUrl()));                
+
+            if (localHome != null) {
+                pkg.setLocalUrl(String.join("/", localHome, pkg.getRelativeUrl()));
             }
-            
-            if (remoteHome.isPresent()) {
-                pkg.setRemoteUrl(String.join("/", remoteHome.get(), pkg.getRelativeUrl()));
+
+            if (remoteHome != null) {
+                pkg.setRemoteUrl(String.join("/", remoteHome, pkg.getRelativeUrl()));
             }
-            
+
+            if (validator.validate(pkg)) {
+                downloadsSize += pkg.getLength();
+                downloads++;
+            }
+
             if (ValidationUtils.isValidFile(pkg.getLocalUrl(), pkg.getChecksum())) {
-                downloaded += pkg.getSize();
-                downloadedCount++;
+                downloadsSize += pkg.getLength();
+                downloads++;
             }
 
-            size += pkg.getSize();
+            availableSize += pkg.getLength();
             packages.add(pkg);
-        }       
+        }
 
-        return new PackageList(packages, downloadedCount, size, downloaded);
+        return new PackageList(packages, downloads, availableSize, downloadsSize);
     }
 
-    public class PackageList implements Iterable<DebPackage> {
-
-        private final  List<DebPackage> packages;
-
-        private final int downloadedCount;
-
-        private final long size;
-
-        private final long downloaded;
-
-        public PackageList(List<DebPackage> packages, int downloadedCount, long size, long downloaded) {
-            this.packages = packages;
-            this.downloadedCount = downloadedCount;
-            this.size = size;
-            this.downloaded = downloaded;
-        }
-
-        @Override
-        public Iterator<DebPackage> iterator() {
-            return packages.iterator();
-        }        
-
-        public List<DebPackage> getPackages() {
-            return packages;
-        }
-
-        public int getCount() { return packages.size(); }
-
-        public int getDownloadedCount() {
-            return downloadedCount;
-        }
-
-        public long getDownloaded() {
-            return downloaded;
-        }
-
-        public long getSize() {
-            return size;
-        }
-    }
 }

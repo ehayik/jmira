@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.controller;
 
 import java.io.IOException;
 import javafx.fxml.FXML;
@@ -7,7 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.eljaiek.jmira.app.model.PackageModel;
 import org.eljaiek.jmira.app.util.FileSystemHelper;
 import org.eljaiek.jmira.core.MessageResolver;
 

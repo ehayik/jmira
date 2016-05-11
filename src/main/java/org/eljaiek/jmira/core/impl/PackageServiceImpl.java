@@ -24,6 +24,6 @@ public class PackageServiceImpl implements PackageService {
 
     @Override
     public List<DebPackage> listNotDownloaded() {
-        return packages.findNotDownloaded();
+        return packages.findIdles();
     }
 }

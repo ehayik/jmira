@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.controller;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -7,14 +7,13 @@ import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import org.eljaiek.jmira.app.model.RepositoryModel;
 import org.eljaiek.jmira.core.RepositoryService;
 import org.eljaiek.jmira.data.model.Repository;
 
 /**
  * Created by shidara on 11/10/2015.
  */
-public final class OpenService extends Service<Void> {
+final class OpenService extends Service<Void> {
 
     private final String home;
 
@@ -24,8 +23,7 @@ public final class OpenService extends Service<Void> {
 
     public OpenService(String home, RepositoryService repositoryService) {
         this.home = home;
-        repositories = repositoryService;
-       // packages = packageService;
+        repositories = repositoryService;      
         onOpen = new SimpleObjectProperty<>();
     }
 
@@ -34,11 +32,9 @@ public final class OpenService extends Service<Void> {
         return new Task() {
             @Override
             protected Void call() throws Exception {
-                Repository repository = repositories.open(home);                
-                RepositoryModel model = RepositoryModel.create(repository);                
-                onOpen.get().handle(new OpenEvent(EventType.ROOT, model));  
-                updateProgress(1, 2);
-                updateProgress(1, 2);
+                Repository repository = repositories.open(home);              
+                RepositoryModel model = RepositoryModel.create(repository);                   
+                onOpen.get().handle(new OpenEvent(EventType.ROOT, model));                
                 return null;
             }
         };

@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.events;
 
 import javafx.stage.Window;
 
@@ -7,5 +7,5 @@ import javafx.stage.Window;
  */
 public interface CloseRequestHandler {
 
-    void close(Window window);
+    void onClose(Window window);
 }

@@ -23,5 +23,7 @@ public interface Download extends Runnable {
     
     void cancel();
     
+    void clean();
+    
     void register(Observer observer);
 }

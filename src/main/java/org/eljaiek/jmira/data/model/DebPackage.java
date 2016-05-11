@@ -18,7 +18,7 @@ public class DebPackage implements Serializable {
     
     private String relativeUrl;
     
-    private long size;
+    private long length;
     
     private String localUrl;
     
@@ -29,12 +29,12 @@ public class DebPackage implements Serializable {
     public DebPackage() {
     }
 
-    public DebPackage(String name, String version, String description, String relativeUrl, long size, String localUrl, String remoteUrl, String checksum) {
+    public DebPackage(String name, String version, String description, String relativeUrl, long length, String localUrl, String remoteUrl, String checksum) {
         this.name = name;
         this.version = version;
         this.description = description;
         this.relativeUrl = relativeUrl;
-        this.size = size;
+        this.length = length;
         this.localUrl = localUrl;
         this.remoteUrl = remoteUrl;
         this.checksum = checksum;
@@ -72,12 +72,12 @@ public class DebPackage implements Serializable {
         this.relativeUrl = relativeUrl;
     }
 
-    public long getSize() {
-        return size;
+    public long getLength() {
+        return length;
     }
 
-    public void setSize(long size) {
-        this.size = size;
+    public void setLength(long length) {
+        this.length = length;
     }
 
     public String getLocalUrl() {

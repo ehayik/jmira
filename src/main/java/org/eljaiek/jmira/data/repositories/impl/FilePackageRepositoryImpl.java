@@ -1,6 +1,6 @@
 package org.eljaiek.jmira.data.repositories.impl;
 
-import org.eljaiek.jmira.core.util.ValidationUtils;
+import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.data.model.DebPackage;
 import org.eljaiek.jmira.data.repositories.DataAccessException;
 import org.eljaiek.jmira.data.repositories.PackageRepository;
@@ -28,7 +28,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "rw")) {
             int count = packages.size();
             long size = packages.stream()
-                    .collect(Collectors.summingLong(p -> p.getSize()));
+                    .collect(Collectors.summingLong(p -> p.getLength()));
 
             if (raf.length() != 0) {
                 count += raf.readInt();
@@ -120,7 +120,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
     }
 
     @Override
-    public final long downloaded() {
+    public final long downloadsSize() {
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
@@ -139,7 +139,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
                 DebPackage pkg = (DebPackage) toObject(b);
 
                 if (ValidationUtils.isValidFile(pkg.getLocalUrl(), pkg.getChecksum())) {
-                    downloaded += pkg.getSize();
+                    downloaded += pkg.getLength();
                 }
             }
 
@@ -150,7 +150,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
     }
 
     @Override
-    public List<DebPackage> findNotDownloaded() {
+    public List<DebPackage> findIdles() {
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
@@ -180,7 +180,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
     }
 
     @Override
-    public int countDownloaded() {
+    public int downloads() {
         Assert.isTrue(provider.getFile().isPresent());
         int count = 0;
 

@@ -81,7 +81,7 @@
                             </tooltip>
                         </Button>
                         <Separator layoutX="300.0" layoutY="10.0" orientation="VERTICAL" prefHeight="10.0" />
-                        <Button mnemonicParsing="false" onAction="#showAboutBox" >
+                        <Button mnemonicParsing="false" onAction="#showAboutBox">
                             <graphic>
                                 <ImageView>
                                     <Image url="@resources/icons/helpAbout48.png" />
@@ -100,37 +100,59 @@
             <bottom>
                 <ToolBar prefHeight="34.0" prefWidth="702.0" BorderPane.alignment="CENTER">
                     <items>
-                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true" visible="${controller.visibleRepoStatus}">
                             <image>
                                 <Image url="@resources/icons/homeDevice32.png" />                               
                             </image>
                         </ImageView>
-                        <ProgressBar fx:id="homeIndicator" prefHeight="17.0" prefWidth="84.0" progress="0.0" />
-                        <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="0.0" />
-                        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+                        <ProgressBar fx:id="homeIndicator" prefHeight="17.0" prefWidth="89.0" progress="0.0" visible="${controller.visibleRepoStatus}" />
+                        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" visible="${controller.visibleRepoStatus}">
                             <image>
-                                <Image url="@resources/icons/downloadProgress24.png" />
+                                <Image url="@resources/icons/jmira24.png" />
                             </image>
                         </ImageView>
-                        <ProgressBar fx:id="downIndicator" prefHeight="17.0" prefWidth="84.0" progress="0.0" />
-                        <Label fx:id="repoInfoLabel" text="Available Packages:" textFill="#0b4ced" visible="${controller.visibleLabels}">
+                        <ProgressBar fx:id="downIndicator" prefHeight="17.0" prefWidth="84.0" progress="0.0" visible="${controller.visibleRepoStatus}" />
+                        <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="0.0" visible="${controller.visibleRepoStatus}">
+                            <padding>
+                                <Insets right="10.0" />
+                            </padding>
+                        </Separator>
+                        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" visible="${controller.visibleRepoStatus}">
+                            <image>
+                                <Image url="@resources/icons/newPackage24.png" />
+                            </image>
+                        </ImageView>
+                        <Label fx:id="availableCount" layoutX="270.0" layoutY="18.0" prefHeight="17.0" prefWidth="50.0" text="0" textFill="#106fe3ee" visible="${controller.visibleRepoStatus}">
+                            <padding>
+                                <Insets right="10.0" />
+                            </padding>
+                            <font>
+                                <Font name="System Bold" size="12.0" />
+                            </font>
+                        </Label>
+                        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" visible="${controller.visibleRepoStatus}">
+                            <image>
+                                <Image url="@resources/icons/downloadedPackage24.png" />
+                            </image>
+                        </ImageView>
+                        <Label fx:id="successCount" layoutX="395.0" layoutY="18.0" prefWidth="50.0" text="0" textFill="#23a608f1" visible="${controller.visibleRepoStatus}">
                             <font>
                                 <Font name="System Bold" size="12.0" />
                             </font>
                             <padding>
-                                <Insets left="10.0" />
+                                <Insets right="10.0" />
                             </padding>
                         </Label>
-                        <Label fx:id="availablePackages" layoutX="270.0" layoutY="18.0" text="0" visible="${controller.visibleLabels}" />
-                        <Label fx:id="repoInfoLabel1" layoutX="270.0" layoutY="18.0" text="Downloaded Packages:" textFill="#0b4ced" visible="${controller.visibleLabels}">
+                        <ImageView fitHeight="24.0" fitWidth="24.0" layoutX="275.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" visible="${controller.visibleDownStatus}">
+                            <image>
+                                <Image url="@resources/icons/brokenPackage24.png" />
+                            </image>
+                        </ImageView>
+                        <Label fx:id="errorsCount" prefWidth="50.0" text="0" textFill="#da1010" visible="${controller.visibleDownStatus}">
                             <font>
                                 <Font name="System Bold" size="12.0" />
                             </font>
-                            <padding>
-                                <Insets left="10.0" />
-                            </padding>
                         </Label>
-                        <Label fx:id="downPackages" layoutX="395.0" layoutY="18.0" text="0" visible="${controller.visibleLabels}" />
                     </items>
                 </ToolBar>
             </bottom>

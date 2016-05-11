@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Observer;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import org.eljaiek.jmira.core.util.ValidationUtils;
+import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.springframework.util.Assert;
 
 /**
@@ -15,7 +15,7 @@ import org.springframework.util.Assert;
  */
 public final class DownloadBuilder {
     
-    private static final Map<String, DownloadResolver> resolvers = new ConcurrentHashMap<>();
+    private static final Map<String, DownloadResolver> RESOLVERS = new ConcurrentHashMap<>();
         
     private String url;
     
@@ -29,7 +29,7 @@ public final class DownloadBuilder {
     }
     
     public static void register(String prefix, DownloadResolver resolver) {
-        resolvers.put(prefix, resolver);
+        RESOLVERS.put(prefix, resolver);
     }
     
     public static DownloadBuilder create() {
@@ -61,7 +61,7 @@ public final class DownloadBuilder {
         Assert.notNull(url);
         Assert.hasText(localFolder);
         String prefix = url.substring(0, url.indexOf(":"));
-        DownloadResolver resolver = resolvers.get(prefix);
+        DownloadResolver resolver = RESOLVERS.get(prefix);
         
         if (resolver == null) {
             throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("dowloadBuilder.error"));

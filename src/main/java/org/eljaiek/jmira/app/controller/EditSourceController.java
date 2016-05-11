@@ -14,8 +14,7 @@ import org.controlsfx.validation.Severity;
 import org.controlsfx.validation.ValidationResult;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
-import org.eljaiek.jmira.app.model.SourceModel;
-import org.eljaiek.jmira.core.util.ValidationUtils;
+import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.app.view.ViewModel;
 import org.eljaiek.jmira.core.MessageResolver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +23,14 @@ import org.springframework.stereotype.Controller;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * FXML Controller class
  *
  * @author eduardo.eljaiek
  */
+@Lazy
 @Controller
 public class EditSourceController implements Initializable {
 

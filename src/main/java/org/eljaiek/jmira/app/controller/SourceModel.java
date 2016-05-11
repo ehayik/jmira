@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.model;
+package org.eljaiek.jmira.app.controller;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -10,7 +10,7 @@ import org.eljaiek.jmira.data.model.Source;
  *
  * @author eduardo.eljaiek
  */
-public class SourceModel {
+class SourceModel {
 
     private final BooleanProperty enabled = new SimpleBooleanProperty(true);
 

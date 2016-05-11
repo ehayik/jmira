@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller.util;
+package org.eljaiek.jmira.app.download;
 
 import javafx.event.Event;
 import javafx.event.EventType;
