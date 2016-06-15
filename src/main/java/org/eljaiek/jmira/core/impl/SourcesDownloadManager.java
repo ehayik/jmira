@@ -123,7 +123,7 @@ final class SourcesDownloadManager {
                 factory.create()
                         .url(String.join(SLASH, remote, PACKAGES_BZ2))
                         .localFolder(local.getAbsolutePath())
-                        .get().run();
+                        .get().start();
 
                 File file = Files.createTempFile(UUID.randomUUID().toString(), null).toFile();
                 InputStream inputStream = new FileInputStream(String.join(SLASH, local.getAbsolutePath(), PACKAGES_BZ2));

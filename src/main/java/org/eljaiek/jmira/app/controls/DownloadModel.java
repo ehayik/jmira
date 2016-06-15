@@ -29,8 +29,8 @@ final class DownloadModel {
         download.register(observer);
     }
 
-    public void run() {
-        download.run();
+    public void start() {
+        download.start();
     }
 
     public long getSize() {

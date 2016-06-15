@@ -37,8 +37,8 @@ public final class PackageListCell extends ListCell<PackageModel> {
         try {
             loader.load();
             setGraphic(loader.getRoot());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ex) {
+            throw new JFXControlLoadException(ex);
         }
     }
 

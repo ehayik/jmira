@@ -13,19 +13,18 @@ import org.eljaiek.jmira.core.io.DownloadFailedException;
  * @author eduardo.eljaiek
  */
 final class HttpDownload extends DownloadAdapter {
-    
+
     public HttpDownload(String localFolder, URL url, String checksum) {
         super(localFolder, url, checksum);
-    }    
-    
+    }
+
     @Override
-    public final void run() {
-        
+    public void start() {
         try {
             HttpURLConnection connection = (HttpURLConnection) getUrl().openConnection();
             connection.setRequestProperty("Range", "bytes=" + getDownloaded() + "-");
             connection.connect();
-            
+
             if (connection.getResponseCode() / 100 != 2) {
                 error();
             }
@@ -42,15 +41,15 @@ final class HttpDownload extends DownloadAdapter {
                 setSize(contentLength);
                 stateChanged();
             }
-            
+
             try (RandomAccessFile file = new RandomAccessFile(getLocalUrl(), "rw")) {
                 file.seek(getDownloaded());
-                
+
                 try (InputStream stream = connection.getInputStream()) {
                     write(file, stream);
                 }
             }
-            
+
         } catch (IOException ex) {
             error();
             throw new DownloadFailedException(ex.getMessage(), ex);
@@ -59,6 +58,6 @@ final class HttpDownload extends DownloadAdapter {
 
     @Override
     protected boolean isFileCorrupted() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return false;
     }
 }

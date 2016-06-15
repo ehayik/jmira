@@ -47,7 +47,7 @@ public abstract class DownloadAdapter extends Observable implements Download {
     public void resume() {
         status = DownloadStatus.DOWNLOADING;
         stateChanged();
-        run();
+        start();
     }
 
     @Override
@@ -55,6 +55,11 @@ public abstract class DownloadAdapter extends Observable implements Download {
         status = DownloadStatus.CANCELLED;
         stateChanged();
     }
+
+    @Override
+    public void run() {
+        start();
+    }  
 
     @Override
     public void clean() {

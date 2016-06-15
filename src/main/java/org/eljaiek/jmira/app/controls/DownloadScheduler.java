@@ -284,7 +284,7 @@ public final class DownloadScheduler {
                 queue = new ConcurrentLinkedQueue<>(packageService.listNotDownloaded(settings.isChecksum()));
                 return null;
             } catch (DataAccessException ex) {              
-                throw new RuntimeException(MessageResolver.getDefault().getMessage("search.process.fail"), ex);
+                throw new DownloadFailedException(MessageResolver.getDefault().getMessage("search.process.fail"), ex);
             }
         }
 
@@ -326,16 +326,15 @@ public final class DownloadScheduler {
         protected Void call() throws Exception {
 
             try {
-                download.run();
+                download.start();
+                return null;
             } catch (DownloadFailedException ex) {
                 LOG.error(MessageResolver
                         .getDefault()
                         .getMessage("download.task.fail",
                                 download.getPackageName(), ex.getMessage()));
-
-            }
-
-            return null;
+                throw ex;
+            }            
         }
 
         @Override

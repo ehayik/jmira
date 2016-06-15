@@ -17,6 +17,8 @@ public interface Download extends Runnable {
     
     DownloadStatus getStatus();
     
+    void start();
+    
     void pause();
     
     void resume();

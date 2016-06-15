@@ -19,12 +19,21 @@ public class MainApp extends Application {
     
     private static final Logger LOG = LoggerFactory.getLogger(MainApp.class);
 
-    private static ViewLoader VIEW_LOADER;
+    private static final ViewLoader VIEW_LOADER;
 
-    private static CloseRequestHandler CLOSE_HANDLER;
+    private static final CloseRequestHandler CLOSE_HANDLER;
 
-    private static Environment ENV; 
+    private static final Environment ENV;   
+    
+    private static final ApplicationContext CONTEXT;
 
+    static {
+        CONTEXT = new AnnotationConfigApplicationContext(AppConfig.class);
+        ENV = CONTEXT.getBean(Environment.class);
+        CLOSE_HANDLER = CONTEXT.getBean(CloseRequestHandler.class);
+        VIEW_LOADER = CONTEXT.getBean(ViewLoader.class);
+    }    
+    
     /**
      * The main() method is ignored in correctly deployed JavaFX application.
      * main() serves only as fallback in case the application can not be
@@ -34,13 +43,8 @@ public class MainApp extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> LOG.error(e.getMessage(), e));
-        
-        Locale.setDefault(Locale.ENGLISH);
-        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-        VIEW_LOADER = context.getBean(ViewLoader.class);
-        CLOSE_HANDLER = context.getBean(CloseRequestHandler.class);
-        ENV = context.getBean(Environment.class);
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> LOG.error(e.getMessage(), e));        
+        Locale.setDefault(Locale.ENGLISH);           
         launch(args);        
     }
 

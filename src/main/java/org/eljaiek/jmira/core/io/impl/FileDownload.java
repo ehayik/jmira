@@ -16,7 +16,7 @@ final class FileDownload extends DownloadAdapter {
     }
 
     @Override
-    public final void run() {
+    public void start() {
         File file = new File(getUrl().getFile());
 
         if (getSize() == -1) {
@@ -39,6 +39,6 @@ final class FileDownload extends DownloadAdapter {
 
     @Override
     protected boolean isFileCorrupted() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return false;
     }
 }
