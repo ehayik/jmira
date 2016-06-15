@@ -14,9 +14,7 @@ final class LogViewer extends InlineCssTextArea implements LogHandler {
 
     @Override
     public void info(String log) {
-        Platform.runLater(() -> {
-            log(log, INFO_STYLE);
-        });
+        Platform.runLater(() -> log(log, INFO_STYLE));
     }
 
     @Override

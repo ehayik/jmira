@@ -160,32 +160,31 @@ public final class DownloadScheduler {
     private void start(DownloadModel download) {
         DownloadTask task = new DownloadTask(download);
         download.register(task);
-
-        task.setOnSucceeded(evt -> {
-
-            if (stopDownloads) {
-                return;
-            }
-
-            if (queue.isEmpty()) {
-                remainingThreads--;
-
-                if (remainingThreads == 0) {
-                    fireDoneEvent();
-                }
-
-                return;
-            }
-
-            List<DownloadModel> pack = createDownloads(1);
-
-            if (pack.size() > 0) {
-                start(pack.iterator().next());
-            }
-        });
-
+        task.setOnSucceeded(evt -> handleDownloadSucceeded());
         start(task);
     }
+
+    private void handleDownloadSucceeded() {
+        if (stopDownloads) {
+            return;
+        }
+        
+        if (queue.isEmpty()) {
+            remainingThreads--;
+            
+            if (remainingThreads == 0) {
+                fireDoneEvent();
+            }
+            
+            return;
+        }
+        
+        List<DownloadModel> pack = createDownloads(1);
+        
+        if (!pack.isEmpty()) {
+            start(pack.iterator().next());
+        }
+    } 
 
     private void start(Task<Void> task) {
 
@@ -283,7 +282,7 @@ public final class DownloadScheduler {
                 updateTitle(MessageResolver.getDefault().getMessage("search.task.title"));
                 queue = new ConcurrentLinkedQueue<>(packageService.listNotDownloaded(settings.isChecksum()));
                 return null;
-            } catch (DataAccessException ex) {              
+            } catch (DataAccessException ex) {
                 throw new DownloadFailedException(MessageResolver.getDefault().getMessage("search.process.fail"), ex);
             }
         }
@@ -312,14 +311,14 @@ public final class DownloadScheduler {
 
         private final DownloadModel download;
 
-        public DownloadModel getDownloadModel() {
-            return download;
-        }
-
         public DownloadTask(DownloadModel download) {
             this.download = download;
             updateTitle(download.getPackageName());
             progressView.setGraphicFactory(null);
+        }
+
+        public DownloadModel getDownloadModel() {
+            return download;
         }
 
         @Override
@@ -334,7 +333,7 @@ public final class DownloadScheduler {
                         .getMessage("download.task.fail",
                                 download.getPackageName(), ex.getMessage()));
                 throw ex;
-            }            
+            }
         }
 
         @Override

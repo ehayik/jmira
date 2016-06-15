@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Optional;
+import org.eljaiek.jmira.core.util.FileUtils;
 
 /**
  *
@@ -33,9 +34,7 @@ public abstract class DownloadAdapter extends Observable implements Download {
         this.localFolder = localFolder;
         this.url = url;
         this.checksum = Optional.ofNullable(checksum);
-    }
-    
-    protected abstract boolean isFileCorrupted();
+    }   
 
     @Override
     public void pause() {
@@ -166,6 +165,16 @@ public abstract class DownloadAdapter extends Observable implements Download {
             setStatus(stat);
             stateChanged();
         }
+    }
+    
+    private boolean isFileCorrupted() {
+        File file = new File(getLocalUrl());
+        
+        if(checksum.isPresent()) {
+            return FileUtils.checkSum(file, checksum.get());
+        }
+        
+        return file.length() == size;
     }
 
     @Override

@@ -47,10 +47,7 @@ public class AboutBoxController implements Initializable {
 
     @Autowired
     private Environment env;
-
-    public AboutBoxController() {
-    }
-
+    
     /**
      * Initializes the controller class.
      *

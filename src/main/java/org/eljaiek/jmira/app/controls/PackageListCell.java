@@ -15,7 +15,7 @@ import org.eljaiek.jmira.core.logs.MessageResolver;
  *
  * @author eljaiek
  */
-public final class PackageListCell extends ListCell<PackageModel> {
+public final class PackageListCell extends ListCell<PackageModel> { 
     
     private static final String DOWN_IMAGE_URL = "/org/eljaiek/jmira/app/view/resources/icons/downloadedPackage32.png";
       

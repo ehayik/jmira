@@ -36,9 +36,4 @@ final class FileDownload extends DownloadAdapter {
             throw new DownloadFailedException(ex.getMessage(), ex);
         }
     }
-
-    @Override
-    protected boolean isFileCorrupted() {
-        return false;
-    }
 }

@@ -26,6 +26,7 @@ public class PackageModel {
     private final ObjectProperty<Status> status = new SimpleObjectProperty<>(Status.AVAILABLE);
 
     public PackageModel() {
+        //default constructor
     }
 
     public PackageModel(String name, long size, Status status) {
