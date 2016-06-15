@@ -21,7 +21,7 @@ import static org.eljaiek.jmira.core.util.DebianNamesUtils.PACKAGES_BZ2;
 import static org.eljaiek.jmira.core.util.DebianNamesUtils.PACKAGES_GZ;
 import static org.eljaiek.jmira.core.util.DebianNamesUtils.RELEASE;
 import static org.eljaiek.jmira.core.util.DebianNamesUtils.RELEASE_GPG;
-import org.eljaiek.jmira.core.io.DownloadBuilder;
+import org.eljaiek.jmira.core.io.DownloadBuilderFactory;
 import org.eljaiek.jmira.core.io.DownloadFailedException;
 import org.eljaiek.jmira.core.model.Architecture;
 import org.eljaiek.jmira.core.model.Repository;
@@ -34,32 +34,35 @@ import org.slf4j.LoggerFactory;
  *
  * @author eduardo.eljaiek
  */
-final class SourcesHelper {
+final class SourcesDownloadManager {
 
     private static final String SLASH = "/";
 
-    private static final Logger LOG = LoggerFactory.getLogger(SourcesHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SourcesDownloadManager.class);
 
-    private static ExecutorService POOL;
+    private ExecutorService POOL;
 
-    private SourcesHelper() {
+    private final DownloadBuilderFactory factory;
+
+    SourcesDownloadManager(DownloadBuilderFactory factory) {
+        this.factory = factory;
     }
 
-    static List<SourceFiles> download(Repository repository) {
+    List<SourceFiles> download(Repository repository) {
         List<SourceFiles> result = new ArrayList<>(repository.getSources().size());
 
         repository.getSources().forEach(src -> {
 
             if (src.isEnabled()) {
                 try {
-                    
+
                     if (POOL != null) {
-                       POOL.shutdownNow(); 
+                        POOL.shutdownNow();
                     }
-                    
+
                     POOL = Executors.newWorkStealingPool();
                     SourceFiles sf = download(repository, src);
-                    result.add(sf);                   
+                    result.add(sf);
                     POOL.shutdown();
                     POOL.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException | DownloadFailedException ex) {
@@ -73,23 +76,23 @@ final class SourcesHelper {
         return result;
     }
 
-    private static SourceFiles download(Repository repository, Source source) {
+    private SourceFiles download(Repository repository, Source source) {
         final SourceFiles sf = new SourceFiles(source.getUri());
         String[] arr = source.getUri().split(SLASH);
         final String remoteFolder = String.join(SLASH, source.getUri(), DISTS_FOLDER, source.getDistribution());
         final File folder = new File(String.join(SLASH, repository.getHome(), arr[arr.length - 1], DISTS_FOLDER, source.getDistribution()));
         folder.mkdirs();
-        
-        POOL.submit((Runnable) DownloadBuilder.create()
+
+        POOL.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE))
                 .localFolder(folder.getAbsolutePath())
                 .get());
-     
-        POOL.submit((Runnable) DownloadBuilder.create()
+
+        POOL.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE_GPG))
                 .localFolder(folder.getAbsolutePath())
                 .get());
-    
+
         for (String component : source.getComponentsList()) {
             repository.getArchitectures()
                     .forEach(arch -> download(remoteFolder, folder, component, arch, sf));
@@ -98,26 +101,26 @@ final class SourcesHelper {
         return sf;
     }
 
-    private static void download(String remoteFolder, File localFolder, String component, Architecture arch, SourceFiles sf) {
+    private void download(String remoteFolder, File localFolder, String component, Architecture arch, SourceFiles sf) {
 
         String remote = String.join(SLASH, remoteFolder, component, arch.getFolder());
         File local = new File(String.join(SLASH, localFolder.getAbsolutePath(), component, arch.getFolder()));
         local.mkdirs();
 
-        POOL.submit((Runnable) DownloadBuilder.create()
+        POOL.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remote, RELEASE))
                 .localFolder(local.getAbsolutePath())
                 .get());
-       
-        POOL.submit((Runnable) DownloadBuilder.create()
+
+        POOL.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remote, PACKAGES_GZ))
                 .localFolder(local.getAbsolutePath())
-                .get());     
+                .get());
 
         POOL.submit((Runnable) () -> {
 
             try {
-                DownloadBuilder.create()
+                factory.create()
                         .url(String.join(SLASH, remote, PACKAGES_BZ2))
                         .localFolder(local.getAbsolutePath())
                         .get().run();
@@ -132,7 +135,7 @@ final class SourcesHelper {
         });
     }
 
-    static class SourceFiles {
+    class SourceFiles {
 
         private final String url;
 

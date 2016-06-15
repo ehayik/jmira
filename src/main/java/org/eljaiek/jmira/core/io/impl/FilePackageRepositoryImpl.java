@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.core.io.impl;
 
-import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.core.model.DebPackage;
 import org.eljaiek.jmira.core.io.DataAccessException;
 import org.eljaiek.jmira.core.io.PackageRepository;
@@ -14,12 +13,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.eljaiek.jmira.core.scanner.PackageValidator;
+import org.eljaiek.jmira.core.scanner.PackageValidatorFactory;
 
 @Repository
 final class FilePackageRepositoryImpl implements PackageRepository {
 
     @Autowired
     private PackagesFileProvider provider;
+
+    @Autowired
+    private PackageValidatorFactory validatorFactory;
 
     @Override
     public void saveAll(List<DebPackage> packages) {
@@ -120,7 +124,8 @@ final class FilePackageRepositoryImpl implements PackageRepository {
     }
 
     @Override
-    public final long downloadsSize() {
+    public final long downloadsSize(boolean checksum) {
+        PackageValidator validator = validatorFactory.getPackageValidator(checksum);
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
@@ -138,7 +143,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
-                if (ValidationUtils.isValidFile(pkg.getLocalUrl(), pkg.getChecksum())) {
+                if (validator.validate(pkg)) {
                     downloaded += pkg.getLength();
                 }
             }
@@ -150,7 +155,8 @@ final class FilePackageRepositoryImpl implements PackageRepository {
     }
 
     @Override
-    public List<DebPackage> findIdles() {
+    public List<DebPackage> findIdles(boolean checksum) {
+        PackageValidator validator = validatorFactory.getPackageValidator(checksum);
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
@@ -168,7 +174,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
-                if (!ValidationUtils.isValidFile(new File(pkg.getLocalUrl()), pkg.getChecksum())) {
+                if (!validator.validate(pkg)) {
                     result.add(pkg);
                 }
             }
@@ -180,7 +186,8 @@ final class FilePackageRepositoryImpl implements PackageRepository {
     }
 
     @Override
-    public int downloads() {
+    public int downloads(boolean checksum) {
+        PackageValidator validator = validatorFactory.getPackageValidator(checksum);
         Assert.isTrue(provider.getFile().isPresent());
         int count = 0;
 
@@ -198,7 +205,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
-                if (ValidationUtils.isValidFile(new File(pkg.getLocalUrl()), pkg.getChecksum())) {
+                if (validator.validate(pkg)) {
                     count++;
                 }
             }

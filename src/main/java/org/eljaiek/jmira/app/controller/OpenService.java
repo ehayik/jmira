@@ -1,5 +1,6 @@
 package org.eljaiek.jmira.app.controller;
 
+import org.eljaiek.jmira.app.model.RepositoryModel;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Service;
@@ -33,7 +34,7 @@ final class OpenService extends Service<Void> {
             @Override
             protected Void call() throws Exception {
                 Repository repository = repositories.open(home);              
-                RepositoryModel model = RepositoryModel.create(repository);                   
+                RepositoryModel model = RepositoryModel.getInstance(repository);                   
                 onOpen.get().handle(new OpenEvent(EventType.ROOT, model));                
                 return null;
             }

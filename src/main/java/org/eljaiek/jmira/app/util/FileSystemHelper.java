@@ -11,6 +11,7 @@ import java.text.DecimalFormat;
 public final class FileSystemHelper {
 
     private FileSystemHelper() {
+        throw new AssertionError();
     }
 
     public static final String formatSize(long bytes) {

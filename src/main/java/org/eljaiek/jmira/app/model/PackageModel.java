@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller;
+package org.eljaiek.jmira.app.model;
 
 import java.io.File;
 import javafx.beans.property.LongProperty;
@@ -7,17 +7,16 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.core.model.DebPackage;
 
 /**
  *
  * @author eduardo.eljaiek
  */
- class PackageModel {
+public class PackageModel {
 
     public enum Status {
-        AVAILABLE, DOWNLOADED, CORRUPTED
+        AVAILABLE, DOWNLOADED
     }
 
     private final StringProperty name = new SimpleStringProperty();
@@ -58,7 +57,7 @@ import org.eljaiek.jmira.core.model.DebPackage;
     public LongProperty getSizeProperty() {
         return size;
     }
-    
+
     public Status getStatus() {
         return status.get();
     }
@@ -66,7 +65,7 @@ import org.eljaiek.jmira.core.model.DebPackage;
     public void setStatus(Status status) {
         this.status.set(status);
     }
-    
+
     public ObjectProperty<Status> getStatusProperty() {
         return status;
     }
@@ -76,10 +75,8 @@ import org.eljaiek.jmira.core.model.DebPackage;
 
         File file = new File(debPackage.getLocalUrl());
 
-        if (file.exists() && ValidationUtils.isValidFile(file, debPackage.getChecksum())) {
+        if (file.exists()) {
             status = Status.DOWNLOADED;
-        } else if (file.exists() && !ValidationUtils.isValidFile(file, debPackage.getChecksum())) {
-            status = Status.CORRUPTED;
         }
 
         return new PackageModel(debPackage.getName(), debPackage.getLength(), status);

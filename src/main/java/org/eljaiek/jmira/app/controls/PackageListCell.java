@@ -1,5 +1,6 @@
-package org.eljaiek.jmira.app.controller;
+package org.eljaiek.jmira.app.controls;
 
+import org.eljaiek.jmira.app.model.PackageModel;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -12,14 +13,12 @@ import org.eljaiek.jmira.core.logs.MessageResolver;
 
 /**
  *
- * @author eduardo.eljaiek
+ * @author eljaiek
  */
 public final class PackageListCell extends ListCell<PackageModel> {
     
     private static final String DOWN_IMAGE_URL = "/org/eljaiek/jmira/app/view/resources/icons/downloadedPackage32.png";
-    
-    private static final String BROKEN_IMAGE_URL = "/org/eljaiek/jmira/app/view/resources/icons/brokenPackage32.png";
-    
+      
     private static final String FXML_URL = "/org/eljaiek/jmira/app/view/PackageListCell.fxml";
 
     @FXML
@@ -54,8 +53,6 @@ public final class PackageListCell extends ListCell<PackageModel> {
         
         if (PackageModel.Status.DOWNLOADED == item.getStatus()) {
             imageView.setImage(new Image(DOWN_IMAGE_URL));
-        } else if(PackageModel.Status.CORRUPTED == item.getStatus()) {
-            imageView.setImage(new Image(BROKEN_IMAGE_URL));
         }        
 
         nameLabel.setText(item.getName());

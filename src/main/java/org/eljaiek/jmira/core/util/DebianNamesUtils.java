@@ -22,5 +22,6 @@ public final class DebianNamesUtils {
     public static final String PACKAGES_BZ2 = "Packages.bz2";
     
     private DebianNamesUtils() {
+        throw new AssertionError();
     }   
 }

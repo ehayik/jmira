@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.LongConsumer;
 import org.eljaiek.jmira.core.AccessFailedException;
+import org.eljaiek.jmira.core.io.DownloadBuilderFactory;
+import org.eljaiek.jmira.core.model.Settings;
 
 import static org.eljaiek.jmira.core.util.NamesUtils.SETTINGS_JSON;
 import org.eljaiek.jmira.core.scanner.PackageList;
@@ -44,6 +46,13 @@ public final class RepositoryServiceImpl implements RepositoryService {
 
     @Autowired
     private PackageScanner scanner;
+
+    private final SourcesDownloadManager sourcesManager;
+
+    @Autowired
+    public RepositoryServiceImpl(DownloadBuilderFactory factory) {
+        sourcesManager = new SourcesDownloadManager(factory);
+    }
 
     @Override
     public final void save(Repository repository) throws AccessFailedException {
@@ -85,26 +94,24 @@ public final class RepositoryServiceImpl implements RepositoryService {
         final Status status = new Status();
         Optional<LongConsumer> consumer = Optional.ofNullable(progress);
         Progress.reset(repository.getSources().size());
-        List<SourcesHelper.SourceFiles> sfs = SourcesHelper.download(repository);
+        List<SourcesDownloadManager.SourceFiles> sfs = sourcesManager.download(repository);
         packages.removeAll();
 
-        sfs.forEach(sf -> {
-            sf.stream().forEach(packagesFile -> {
-                try {
-                    String localHome = String.join("/", repository.getHome(), sf.getFolderName());
-                    ScannerConfiguration config = new ScannerConfiguration(packagesFile, false, localHome, sf.getUrl());
-                    PackageList packageList = scanner.scan(config);
-                    packages.saveAll(packageList.getPackages());
-                    status.addAvailable(packageList.getAvailable());
-                    status.addAvailableSize(packageList.getAvailableSize());
-                    status.addDownloadsSize(packageList.getDownloadsSize());
-                    status.addDownloads(packageList.getDownloads());
-                    consumer.orElse(DEF_CONSUMER).accept(Progress.update());
-                } catch (IOException ex) {
-                   
-                }
-            });
-        });
+        sfs.forEach(sf -> sf.stream().forEach(packagesFile -> {
+            try {
+                String localHome = String.join("/", repository.getHome(), sf.getFolderName());
+                ScannerConfiguration config = new ScannerConfiguration(packagesFile, false, localHome, sf.getUrl());
+                PackageList packageList = scanner.scan(config);
+                packages.saveAll(packageList.getPackages());
+                status.addAvailable(packageList.getAvailable());
+                status.addAvailableSize(packageList.getAvailableSize());
+                status.addDownloadsSize(packageList.getDownloadsSize());
+                status.addDownloads(packageList.getDownloads());
+                consumer.orElse(DEF_CONSUMER).accept(Progress.update());
+            } catch (IOException ex) {
+                
+            }
+        }));
 
         return status;
     }
@@ -112,10 +119,11 @@ public final class RepositoryServiceImpl implements RepositoryService {
     @Override
     public Status refresh(Repository repository) {
         Status status = new Status();
+        Settings prefs = repository.getSettings();
         status.addAvailable(packages.count());
         status.addAvailableSize(packages.size());
-        status.addDownloadsSize(packages.downloadsSize());
-        status.addDownloads(packages.downloads());
+        status.addDownloadsSize(packages.downloadsSize(prefs.isChecksum()));
+        status.addDownloads(packages.downloads(prefs.isChecksum()));
         return status;
     }
 

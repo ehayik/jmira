@@ -13,5 +13,5 @@ public interface PackageService {
     
     List<DebPackage> list(int start, int limit);
     
-    List<DebPackage> listNotDownloaded();
+    List<DebPackage> listNotDownloaded(boolean checksum);
 }

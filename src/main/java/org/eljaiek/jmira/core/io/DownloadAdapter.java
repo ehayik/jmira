@@ -1,6 +1,5 @@
 package org.eljaiek.jmira.core.io;
 
-import org.eljaiek.jmira.core.logs.MessageResolver;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,8 +8,6 @@ import java.net.URL;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Optional;
-import org.apache.commons.io.FilenameUtils;
-import org.eljaiek.jmira.app.util.ValidationUtils;
 
 /**
  *
@@ -20,7 +17,7 @@ public abstract class DownloadAdapter extends Observable implements Download {
 
     private static final int MAX_BUFFER_SIZE = 8192;
 
-    private final Optional<String> checksum;
+    protected final Optional<String> checksum;
 
     private DownloadStatus status = DownloadStatus.DOWNLOADING;
 
@@ -32,11 +29,13 @@ public abstract class DownloadAdapter extends Observable implements Download {
 
     private URL url;
 
-    public DownloadAdapter(String localFolder, URL url, Optional<String> checksum) {
+    public DownloadAdapter(String localFolder, URL url, String checksum) {
         this.localFolder = localFolder;
         this.url = url;
-        this.checksum = checksum;
+        this.checksum = Optional.ofNullable(checksum);
     }
+    
+    protected abstract boolean isFileCorrupted();
 
     @Override
     public void pause() {
@@ -153,18 +152,13 @@ public abstract class DownloadAdapter extends Observable implements Download {
         /* Change status to complete if this point was
          reached because downloading has finished. */
         if (getStatus() == DownloadStatus.DOWNLOADING) {
-
-            if (checksum.isPresent()) {
-                File file = new File(getLocalUrl());
-
-                if (!ValidationUtils.isValidFile(file, checksum.get())) {
-                    file.delete();
-                    String filename = FilenameUtils.getBaseName(getLocalUrl());
-                    throw new DownloadFailedException(MessageResolver.getDefault().getMessage("download.file.damageError", filename));
-                }
+            DownloadStatus stat = DownloadStatus.COMPLETE;
+            
+            if (isFileCorrupted()) {
+                stat = DownloadStatus.CORRUPTED;
             }
 
-            setStatus(DownloadStatus.COMPLETE);
+            setStatus(stat);
             stateChanged();
         }
     }

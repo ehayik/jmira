@@ -1,6 +1,7 @@
 
 package org.eljaiek.jmira.app.controller;
 
+import org.eljaiek.jmira.app.model.SourceModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
@@ -14,7 +15,6 @@ import org.controlsfx.validation.Severity;
 import org.controlsfx.validation.ValidationResult;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
-import org.eljaiek.jmira.app.util.ValidationUtils;
 import org.eljaiek.jmira.app.view.ViewModel;
 import org.eljaiek.jmira.core.logs.MessageResolver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import org.eljaiek.jmira.core.util.UrlUtils;
 
 /**
  * FXML Controller class
@@ -58,14 +59,12 @@ public class EditSourceController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         validationSupport.registerValidator(uriTextField, true, (Control t, String value) -> {
-            boolean isValid = ValidationUtils.isValidUrl(value);
+            boolean isValid = UrlUtils.isValid(value);
             return ValidationResult.fromMessageIf(t, messages.getMessage("urlTextField.error"), Severity.ERROR, !isValid);
         });
         validationSupport.registerValidator(distsTextField, true, Validator.createEmptyValidator(messages.getMessage("field.required")));
         validationSupport.registerValidator(compTextField, true, Validator.createEmptyValidator(messages.getMessage("field.required")));
-        validationSupport.invalidProperty().addListener((observable, oldValue, newValue) -> {
-            disabled.set(newValue);
-        });
+        validationSupport.invalidProperty().addListener((observable, oldValue, newValue) ->  disabled.set(newValue));
     }
 
     @ViewModel("model")

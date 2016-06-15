@@ -2,19 +2,22 @@ package org.eljaiek.jmira.core.io.impl;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Optional;
 import org.eljaiek.jmira.core.io.Download;
 import org.eljaiek.jmira.core.io.DownloadResolver;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 /**
  *
- * @author eduardo.eljaiek
+ * @author eljaiek
  */
-public final class HttpDownloadResolver implements DownloadResolver {
+@Lazy
+@Component(value = "httpDownloadResolver")
+final class HttpDownloadResolver implements DownloadResolver {
 
     @Override
-    public final Download resolve(String localFolder, String url, Optional<String> checksum) {
+    public final Download resolve(String localFolder, String url, String checksum) {
         Assert.isTrue(url.startsWith("http"));
 
         try {

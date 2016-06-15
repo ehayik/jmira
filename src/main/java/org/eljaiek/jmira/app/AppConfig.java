@@ -5,13 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.PostConstruct;
 import org.eljaiek.jmira.app.view.ViewLoader;
 import org.eljaiek.jmira.app.view.Views;
-import org.eljaiek.jmira.core.io.DownloadBuilder;
 import org.eljaiek.jmira.core.logs.MessageResolver;
-import org.eljaiek.jmira.core.io.impl.FileDownloadResolver;
-import org.eljaiek.jmira.core.io.impl.HttpDownloadResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -29,12 +25,6 @@ import org.springframework.context.support.ResourceBundleMessageSource;
     "org.eljaiek.jmira.data.repositories.impl"})
 @PropertySource("classpath:application.properties")        
 class AppConfig {
-
-    @PostConstruct
-    public void registerDownloadResolvers() {
-        DownloadBuilder.register("http", new HttpDownloadResolver());
-        DownloadBuilder.register("file", new FileDownloadResolver());
-    }
 
     @Bean
     public ViewLoader viewLoader() {

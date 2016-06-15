@@ -1,10 +1,13 @@
 package org.eljaiek.jmira.app.controller;
 
+import org.eljaiek.jmira.app.controls.PackageListCell;
+import org.eljaiek.jmira.app.model.RepositoryModel;
+import org.eljaiek.jmira.app.model.PackageModel;
 import org.eljaiek.jmira.core.logs.MessageResolver;
 import org.eljaiek.jmira.core.util.NamesUtils;
 import org.eljaiek.jmira.app.events.CloseRequestHandler;
-import org.eljaiek.jmira.app.download.DownloadScheduler;
-import org.eljaiek.jmira.app.download.DownloadFailEvent;
+import org.eljaiek.jmira.app.controls.DownloadScheduler;
+import org.eljaiek.jmira.app.controls.DownloadFailEvent;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -94,7 +97,8 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     @Autowired
     private Environment env;
 
-    private DownloadScheduler downScheduler;
+    @Autowired
+    private DownloadScheduler downloadScheduler;
 
     @FXML
     private ListView<PackageModel> packagesListView;
@@ -138,7 +142,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     @FXML
     private Label errorsCount;
 
-    private RepositoryModel current;
+    private RepositoryModel currentRepository;
 
     public HomeController() {
         paginationHelper = new PaginationHelper();
@@ -181,8 +185,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
      * Initializes the controller class.
      */
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        downScheduler = new DownloadScheduler(packages);
+    public void initialize(URL url, ResourceBundle rb) {        
         listViewPane.getChildren().remove(pagination);
 
         packagesListView.setPlaceholder(new Label("No Content In List"));
@@ -195,7 +198,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         });
 
         EventHandler onDownloadStop = evt -> {
-            mainPane.getChildren().remove(downScheduler.getControl());
+            mainPane.getChildren().remove(downloadScheduler.getControl());
             mainPane.setCenter(listViewPane);
             downBtn.setGraphic(startDownloadIcon);
             downBtn.setOnAction(this::startDownload);
@@ -205,23 +208,23 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
             packagesListView.setItems(page);
         };
 
-        downScheduler.setOnCancelled(onDownloadStop);
-        downScheduler.setOnDone(onDownloadStop);
+        downloadScheduler.setOnCancelled(onDownloadStop);
+        downloadScheduler.setOnDone(onDownloadStop);
 
-        downScheduler.setOnLoadSucceeded(evt -> {
+        downloadScheduler.setOnLoadSucceeded(evt -> {
             downBtn.setGraphic(cancelDownloadIcon);
-            downBtn.setOnAction(e -> downScheduler.cancel());
+            downBtn.setOnAction(e -> downloadScheduler.cancel());
             downBtn.setDisable(false);
         });
 
-        downScheduler.setOnFail(evt -> {
+        downloadScheduler.setOnFail(evt -> {
             downBtn.setDisable(false);
             onDownloadStop.handle(evt);
             Exception error = ((DownloadFailEvent) evt).getError();
             AlertHelper.error(null, messages.getMessage("download.scheduler.fail"), error.getMessage(), error);
         });
 
-        downScheduler.setOnDone(evt -> {
+        downloadScheduler.setOnDone(evt -> {
             downBtn.setDisable(false);
             onDownloadStop.handle(evt);
             AlertHelper.info(null, messages.getMessage("download.scheduler.done"), "", true);
@@ -257,12 +260,12 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
             });
 
             service.setOnOpen(evt -> {
-                current = evt.getModel();
-                RepositoryService.Status status = repositories.refresh(current.getRepository());
-                current.setAvailable(status.getAvailable());
-                current.setAvailableSize(status.getAvailableSize());
-                current.setDownloads(status.getDownloads());
-                current.setDownloadsSize(status.getDownloadsSize());
+                currentRepository = evt.getModel();
+                RepositoryService.Status status = repositories.refresh(currentRepository.getRepository());
+                currentRepository.setAvailable(status.getAvailable());
+                currentRepository.setAvailableSize(status.getAvailableSize());
+                currentRepository.setDownloads(status.getDownloads());
+                currentRepository.setDownloadsSize(status.getDownloadsSize());
             });
 
             AlertHelper.progress(messages.getMessage("repository.open.progressHeader"),
@@ -274,46 +277,46 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     @FXML
     void editRepository(ActionEvent event) {
         Window window = ((Node) event.getTarget()).getScene().getWindow();
-        showRepositoryView(current.getName(), window, new RepositoryModel(current), ViewMode.EDIT);
-        ((Stage) window).setTitle(String.format(TITLE_TEMPLATE, current.getName()));
+        showRepositoryView(currentRepository.getName(), window, new RepositoryModel(currentRepository), ViewMode.EDIT);
+        ((Stage) window).setTitle(String.format(TITLE_TEMPLATE, currentRepository.getName()));
     }
 
     @FXML
     void synchronize(ActionEvent event) {
         timer.stop();
-        final Service service = new SynchronizeService(current, repositories);
+        final Service service = new SynchronizeService(currentRepository, repositories);
         service.setOnSucceeded(evt -> {
             updateView();
             downBtn.setDisable(false);
         });
 
         service.setOnFailed(evt -> {
-            String error = messages.getMessage("repository.sync.errorContext", current.getName());
+            String error = messages.getMessage("repository.sync.errorContext", currentRepository.getName());
             LOG.error(error, service.getException());
             AlertHelper.error(null, messages.getMessage("repository.sync.errorHeader"), null, new RuntimeException(error, service.getException()));
             timer.restart();
         });
 
         AlertHelper.progress(messages.getMessage("repository.sync.progressHeader"),
-                messages.getMessage("repository.sync.progressContext", current.getName()),
+                messages.getMessage("repository.sync.progressContext", currentRepository.getName()),
                 service);
     }
 
     @FXML
     void startDownload(ActionEvent event) {
-        downScheduler.downloadedProperty().bindBidirectional(current.downloadsSizeProperty());
-        downScheduler.downloadedCountProperty().bindBidirectional(current.downloadsProperty());
+        downloadScheduler.downloadedProperty().bindBidirectional(currentRepository.downloadsSizeProperty());
+        downloadScheduler.downloadedCountProperty().bindBidirectional(currentRepository.downloadsProperty());
         disabledOnDownload(true);
         downBtn.setDisable(true);
         visibleDownStatus.set(true);
         mainPane.getChildren().remove(listViewPane);
-        mainPane.setCenter(downScheduler.getControl());
-        downScheduler.start();
+        mainPane.setCenter(downloadScheduler.getControl());
+        downloadScheduler.start(currentRepository.getSettings());
 
-        File f = new File(current.getHome());
+        File f = new File(currentRepository.getHome());
 
-        if (f.getFreeSpace() < current.getAvailableSize() - current.getDownloadsSize()) {
-            LOG.warn(messages.getMessage("diskSpace.warn", current.getHome()));
+        if (f.getFreeSpace() < currentRepository.getAvailableSize() - currentRepository.getDownloadsSize()) {
+            LOG.warn(messages.getMessage("diskSpace.warn", currentRepository.getHome()));
         }
     }
 
@@ -372,7 +375,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     private void open(RepositoryModel model) {
         try {
             repositories.save(model.getRepository());
-            current = model;
+            currentRepository = model;
             disableOnOpen(false);
         } catch (IOException ex) {
             AlertHelper.error(null, messages.getMessage("repository.createError"), ex.getMessage(), ex);
@@ -384,7 +387,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         pagination.setCurrentPageIndex(0);
         packagesListView.setItems(paginationHelper.createPage());
 
-        if (current.getAvailable() > paginationHelper.pageSize) {
+        if (currentRepository.getAvailable() > paginationHelper.pageSize) {
             listViewPane.setBottom(pagination);
         } else {
             listViewPane.getChildren().remove(pagination);
@@ -397,14 +400,14 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
 
     private void updateToolBar() {
         visibleRepoStatus.set(true);
-        availableCount.setText(NUMBER_FORMAT.format(current.getAvailable()));
-        successCount.setText(NUMBER_FORMAT.format(current.getDownloads()));
-        errorsCount.setText(NUMBER_FORMAT.format(downScheduler.getErrors()));
-        double percent = FileSystemHelper.getUsedSpacePercent(current.getHome());
+        availableCount.setText(NUMBER_FORMAT.format(currentRepository.getAvailable()));
+        successCount.setText(NUMBER_FORMAT.format(currentRepository.getDownloads()));
+        errorsCount.setText(NUMBER_FORMAT.format(downloadScheduler.getErrors()));
+        double percent = FileSystemHelper.getUsedSpacePercent(currentRepository.getHome());
         homeIndicator.setProgress(percent * 0.01);
 
-        if (current.getDownloadsSize() != 0) {
-            double downPercent = current.getDownloadsSize() * 100 / current.getAvailableSize();
+        if (currentRepository.getDownloadsSize() != 0) {
+            double downPercent = currentRepository.getDownloadsSize() * 100 / currentRepository.getAvailableSize();
             downIndicator.setProgress(downPercent * 0.1);
         }
     }
@@ -413,8 +416,8 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     public final Optional<File> getFile() {
         File file = null;
 
-        if (current != null) {
-            file = new File(String.join("/", current.getHome(), NamesUtils.PACKAGES_DAT));
+        if (currentRepository != null) {
+            file = new File(String.join("/", currentRepository.getHome(), NamesUtils.PACKAGES_DAT));
         }
 
         return Optional.ofNullable(file);
@@ -424,8 +427,8 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     public void onClose(Window window) {
         try {
 
-            if (current != null) {
-                repositories.save(current.getRepository());
+            if (currentRepository != null) {
+                repositories.save(currentRepository.getRepository());
             }
 
         } catch (IOException | IllegalArgumentException ex) {
@@ -456,7 +459,7 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
         }
 
         public int getPageCount() {
-            return current.getAvailable() / pageSize;
+            return currentRepository.getAvailable() / pageSize;
         }
 
         public ObservableList<PackageModel> createPage() {

@@ -1,9 +1,13 @@
-package org.eljaiek.jmira.app.download;
+package org.eljaiek.jmira.app.controls;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Queue;
 import org.eljaiek.jmira.core.logs.LogbackAppenderAdapter;
 import org.eljaiek.jmira.core.io.DownloadStatus;
 import org.eljaiek.jmira.core.io.Download;
-import org.eljaiek.jmira.core.io.DownloadBuilder;
 import org.eljaiek.jmira.core.io.DownloadFailedException;
 import org.eljaiek.jmira.core.logs.MessageResolver;
 import javafx.beans.property.IntegerProperty;
@@ -22,18 +26,21 @@ import org.eljaiek.jmira.core.model.DebPackage;
 import org.eljaiek.jmira.core.io.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import org.eljaiek.jmira.app.util.SettingsHelper;
-import static org.eljaiek.jmira.app.util.SettingsHelper.THREADS_NUMBER;
-import static org.eljaiek.jmira.app.util.SettingsHelper.USE_CHECKSUM;
+import org.eljaiek.jmira.app.model.SettingsModel;
+import org.eljaiek.jmira.core.io.DownloadBuilderFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 /**
  * Created by eduardo.eljaiek on 12/4/2015.
  */
+@Lazy
+@Component
 public final class DownloadScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(DownloadScheduler.class);
@@ -56,8 +63,6 @@ public final class DownloadScheduler {
 
     private final LongProperty downloaded;
 
-    private final PackageService packageService;
-
     private Queue<DebPackage> queue;
 
     private ExecutorService pool;
@@ -70,8 +75,15 @@ public final class DownloadScheduler {
 
     private EventHandler<DownloadEvent> onLoadSucceeded;
 
-    public DownloadScheduler(PackageService packageService) {
-        this.packageService = packageService;
+    private SettingsModel settings;
+
+    @Autowired
+    private PackageService packageService;
+
+    @Autowired
+    private DownloadBuilderFactory downloadBuilderFactory;
+
+    public DownloadScheduler() {
         downloadedCount = new SimpleIntegerProperty();
         errors = new SimpleIntegerProperty();
         downloaded = new SimpleLongProperty();
@@ -112,21 +124,20 @@ public final class DownloadScheduler {
 
     public final void cancel() {
         stopDownloads = true;
-        Task<Void> cancelTask = new CancelTask();
         progressView.getTasks().forEach(task -> ((DownloadTask) task).cancel(true));
         pool.shutdown();
         fireCancelledEvent();
     }
 
-    public final void start() {
+    public final void start(SettingsModel settings) {
+        this.settings = settings;
         LogbackAppenderAdapter.register(APPENDER_NAME, logViewer);
-        int threads = SettingsHelper.getInt(THREADS_NUMBER);
-        pool = Executors.newFixedThreadPool(threads);
+        pool = Executors.newFixedThreadPool(settings.getDownloadThreads());
         Task<Void> searchTask = new SearchTask();
 
         searchTask.setOnSucceeded(evt -> {
             fireLoadSucceeded();
-            List<DownloadModel> downloads = createDownloads(threads);
+            List<DownloadModel> downloads = createDownloads(settings.getDownloadThreads());
 
             if (downloads.isEmpty()) {
                 fireDoneEvent();
@@ -194,10 +205,10 @@ public final class DownloadScheduler {
             DebPackage p = queue.poll();
             String localUrl = p.getLocalUrl();
             String folder = localUrl.substring(0, localUrl.lastIndexOf('/'));
-            Download download = DownloadBuilder
+            Download download = downloadBuilderFactory
                     .create()
                     .localFolder(folder).url(p.getRemoteUrl())
-                    .checksum(SettingsHelper.getBoolean(USE_CHECKSUM) ? p.getChecksum() : null)
+                    .checksum(settings.isChecksum() ? p.getChecksum() : null)
                     .get();
             downloads.add(new DownloadModel(p.getName(), p.getLength(), download));
             i++;
@@ -270,11 +281,10 @@ public final class DownloadScheduler {
 
             try {
                 updateTitle(MessageResolver.getDefault().getMessage("search.task.title"));
-                queue = new ConcurrentLinkedQueue<>(packageService.listNotDownloaded());
+                queue = new ConcurrentLinkedQueue<>(packageService.listNotDownloaded(settings.isChecksum()));
                 return null;
-            } catch (DataAccessException ex) {
-                LOG.error(ex.getMessage(), ex.getMessage());
-                throw new RuntimeException(MessageResolver.getDefault().getMessage("search.process.fail"));
+            } catch (DataAccessException ex) {              
+                throw new RuntimeException(MessageResolver.getDefault().getMessage("search.process.fail"), ex);
             }
         }
 
@@ -284,21 +294,20 @@ public final class DownloadScheduler {
         }
     }
 
-    class CancelTask extends Task<Void> {
-
-        @Override
-        protected Void call() throws Exception {
-            try {
-                updateTitle("Cancelling in progress downloads....");
-                
-            } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-            }
-            
-            return null;
-        }    
-    }
-
+//    class CancelTask extends Task<Void> {
+//
+//        @Override
+//        protected Void call() throws Exception {
+//            try {
+//                updateTitle("Cancelling in progress downloads....");
+//
+//            } catch (Exception e) {
+//                LOG.error(e.getMessage(), e);
+//            }
+//
+//            return null;
+//        }
+//    }
     class DownloadTask extends Task<Void> implements Observer {
 
         private final DownloadModel download;

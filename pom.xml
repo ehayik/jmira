@@ -22,7 +22,7 @@
         <io.version>2.4</io.version> 
         <spring.version>4.2.5.RELEASE</spring.version>
         <lang.version>2.6</lang.version>
-<!--        <guava.version>18.0</guava.version>-->
+        <sonar.language>java</sonar.language>
     </properties>
 
     <organization>      

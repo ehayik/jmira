@@ -23,7 +23,7 @@ public class PackageServiceImpl implements PackageService {
     }
 
     @Override
-    public List<DebPackage> listNotDownloaded() {
-        return packages.findIdles();
+    public List<DebPackage> listNotDownloaded(boolean checksum) {
+        return packages.findIdles(checksum);
     }
 }

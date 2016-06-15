@@ -1,4 +1,3 @@
-
 package org.eljaiek.jmira.core.scanner.impl;
 
 import java.io.File;
@@ -13,7 +12,7 @@ final class LengthPackageValidator implements PackageValidator {
 
     @Override
     public boolean validate(DebPackage pkg) {
-       File file = new File(pkg.getLocalUrl());       
-       return file.length() == pkg.getLength();
+        File file = new File(pkg.getLocalUrl());
+        return file.length() == pkg.getLength();
     }
 }

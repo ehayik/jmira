@@ -1,5 +1,6 @@
 package org.eljaiek.jmira.app.controller;
 
+import org.eljaiek.jmira.app.model.RepositoryModel;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import org.eljaiek.jmira.core.RepositoryService;

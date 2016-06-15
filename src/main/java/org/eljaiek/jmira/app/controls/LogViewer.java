@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.download;
+package org.eljaiek.jmira.app.controls;
 
 import org.eljaiek.jmira.core.logs.LogHandler;
 import javafx.application.Platform;
@@ -21,16 +21,12 @@ final class LogViewer extends InlineCssTextArea implements LogHandler {
 
     @Override
     public void error(String log) {
-        Platform.runLater(() -> {
-            log(log, ERROR_STYLE);
-        });
+        Platform.runLater(() -> log(log, ERROR_STYLE));
     }
 
     @Override
     public void warn(String log) {
-         Platform.runLater(() -> {
-            log(log, WARN_STYLE);
-        });
+         Platform.runLater(() -> log(log, WARN_STYLE));
     }
 
     private void log(String message, String style) {

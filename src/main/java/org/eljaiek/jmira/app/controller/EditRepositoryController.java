@@ -1,5 +1,7 @@
 package org.eljaiek.jmira.app.controller;
 
+import org.eljaiek.jmira.app.model.RepositoryModel;
+import org.eljaiek.jmira.app.model.SourceModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
@@ -45,6 +47,8 @@ import java.util.ResourceBundle;
 import java.util.function.Function;
 
 import static org.eljaiek.jmira.core.util.NamesUtils.SETTINGS_JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * FXML Controller class
@@ -54,6 +58,10 @@ import static org.eljaiek.jmira.core.util.NamesUtils.SETTINGS_JSON;
 @Lazy
 @Controller
 public class EditRepositoryController implements Initializable {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(EditRepositoryController.class);
+    
+    private static final int DOUBLE_CLICK = 2;
 
     @Autowired
     private ViewLoader viewLoader;
@@ -102,6 +110,7 @@ public class EditRepositoryController implements Initializable {
                try {
                   condition = f.exists() && !Files.isSameFile(f.toPath(), new File(home).toPath());
                 } catch (IOException ex) {  
+                    LOG.error(ex.getMessage(), ex);
                   condition = false;  
                 }              
             }           
@@ -109,12 +118,11 @@ public class EditRepositoryController implements Initializable {
             return ValidationResult.fromMessageIf(t, messages.getMessage("homeTextField.error"), Severity.ERROR, condition);
         });
 
-        validationSupport.invalidProperty().addListener((observable, oldValue, newValue) -> {
-            disabled.set(newValue);
-        });
+        validationSupport.invalidProperty()
+                .addListener((observable, oldValue, newValue) ->  disabled.set(newValue));
 
         archsComboBox.getCheckModel().getCheckedItems().addListener((ListChangeListener<Architecture>) c -> {
-            if (c.getList().size() == 0) {
+            if (c.getList().isEmpty()) {
                 archsComboBox.getCheckModel().check(0);
             }
 
@@ -123,9 +131,9 @@ public class EditRepositoryController implements Initializable {
             }
         });
 
-        sourcesListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            noSelection.set(newValue == null);
-        });        
+        sourcesListView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldValue, newValue) -> noSelection.set(newValue == null));        
     }
 
     public BooleanProperty disabledProperty() {
@@ -175,6 +183,7 @@ public class EditRepositoryController implements Initializable {
                 SourceModel sourceModel = SourceModel.create(source);
                 sourcesListView.getItems().add(sourceModel);
             } catch (IllegalArgumentException ex) {
+                LOG.error(ex.getMessage(), ex);
                 AlertHelper.error(window, messages.getMessage("newSourceDialog.error"), ex.getMessage());
             }
         }
@@ -213,12 +222,11 @@ public class EditRepositoryController implements Initializable {
     }
     
     @FXML
-    void editOnClick(MouseEvent event) {
-        
-        if (event.getClickCount() == 2 && sourcesListView.getSelectionModel().getSelectedItem() != null) {
+    void editOnClick(MouseEvent event) {   
+        if (event.getClickCount() == DOUBLE_CLICK && sourcesListView.getSelectionModel().getSelectedItem() != null) {
            editAction(new ActionEvent(null, event.getTarget()));
         }
-    }
+    }    
 
     private Dialog<String> sourceDialog(Window window) {
         TextInputDialog dialog = new TextInputDialog();
@@ -236,9 +244,9 @@ public class EditRepositoryController implements Initializable {
         GridPane gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(20);
-        gridPane.add(contextText, 2, 1);
-        gridPane.add(label, 1, 2);
-        gridPane.add(textField, 2, 2);
+        gridPane.add(contextText, DOUBLE_CLICK, 1);
+        gridPane.add(label, 1, DOUBLE_CLICK);
+        gridPane.add(textField, DOUBLE_CLICK, DOUBLE_CLICK);
 
         dialog.getDialogPane().setContent(gridPane);
         dialog.setResultConverter(btn -> {

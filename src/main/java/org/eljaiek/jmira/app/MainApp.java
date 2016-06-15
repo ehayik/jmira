@@ -34,9 +34,7 @@ public class MainApp extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> {
-            LOG.error(e.getMessage(), e);
-        });
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> LOG.error(e.getMessage(), e));
         
         Locale.setDefault(Locale.ENGLISH);
         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);

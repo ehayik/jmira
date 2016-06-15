@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Optional;
 import org.eljaiek.jmira.core.io.DownloadAdapter;
 import org.eljaiek.jmira.core.io.DownloadFailedException;
 
@@ -15,7 +14,7 @@ import org.eljaiek.jmira.core.io.DownloadFailedException;
  */
 final class HttpDownload extends DownloadAdapter {
     
-    public HttpDownload(String localFolder, URL url, Optional<String> checksum) {
+    public HttpDownload(String localFolder, URL url, String checksum) {
         super(localFolder, url, checksum);
     }    
     
@@ -56,5 +55,10 @@ final class HttpDownload extends DownloadAdapter {
             error();
             throw new DownloadFailedException(ex.getMessage(), ex);
         }
+    }
+
+    @Override
+    protected boolean isFileCorrupted() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

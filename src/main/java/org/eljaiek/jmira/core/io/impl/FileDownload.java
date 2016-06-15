@@ -2,17 +2,16 @@ package org.eljaiek.jmira.core.io.impl;
 
 import java.io.*;
 import java.net.URL;
-import java.util.Optional;
 import org.eljaiek.jmira.core.io.DownloadAdapter;
 import org.eljaiek.jmira.core.io.DownloadFailedException;
 
 /**
  *
- * @author shidara
+ * @author eljaiek
  */
 final class FileDownload extends DownloadAdapter {
 
-    public FileDownload(String localFolder, URL url, Optional<String> checksum) {
+    public FileDownload(String localFolder, URL url, String checksum) {
         super(localFolder, url, checksum);
     }
 
@@ -36,5 +35,10 @@ final class FileDownload extends DownloadAdapter {
             error();
             throw new DownloadFailedException(ex.getMessage(), ex);
         }
+    }
+
+    @Override
+    protected boolean isFileCorrupted() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

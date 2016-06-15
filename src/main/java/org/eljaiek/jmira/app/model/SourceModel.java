@@ -1,4 +1,4 @@
-package org.eljaiek.jmira.app.controller;
+package org.eljaiek.jmira.app.model;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -10,7 +10,7 @@ import org.eljaiek.jmira.core.model.Source;
  *
  * @author eduardo.eljaiek
  */
-class SourceModel {
+public class SourceModel {
 
     private final BooleanProperty enabled = new SimpleBooleanProperty(true);
 
@@ -94,14 +94,6 @@ class SourceModel {
         return src;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(uri.get()).append("/ ").append(distribution.get());
-        builder.append(" ").append(components.get());
-        return builder.toString();
-    }
-
     public static SourceModel create(Source source) {
         SourceModel model = new SourceModel();
         model.setEnabled(source.isEnabled());
@@ -109,5 +101,13 @@ class SourceModel {
         model.setDistribution(source.getDistribution());
         model.setComponents(source.getComponents());
         return model;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(uri.get()).append("/ ").append(distribution.get());
+        builder.append(" ").append(components.get());
+        return builder.toString();
     }
 }

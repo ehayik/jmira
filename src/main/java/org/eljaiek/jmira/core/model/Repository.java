@@ -1,43 +1,39 @@
 package org.eljaiek.jmira.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
- * @author shidara
+ * @author eljaiek
+ * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Repository {
 
     private String name;
 
     private String home;
 
-//    private int packagesCount;
-//
-//    private int downloadedCount;
-//
-//    private long size;
-//
-//    private long downloadedSize;
-
     private List<Architecture> architectures;
 
-    private  List<Source> sources;
+    private List<Source> sources;
+
+    private Settings settings;
 
     public Repository() {
         sources = new ArrayList<>(4);
         architectures = new ArrayList<>(2);
+        settings = new Settings();
     }
 
-    public Repository(String name, String home/*, int packagesCount, int downloadedCount, long downloadedSize*/) {
+    public Repository(String name, String home, Settings preferences) {
         this.name = name;
         this.home = home;
-//        this.packagesCount = packagesCount;
-//        this.downloadedCount = downloadedCount;
-//        this.downloadedSize = downloadedSize;
         this.architectures = new ArrayList<>(2);
         sources = new ArrayList<>(4);
+        this.settings = preferences;
     }
 
     public String getName() {
@@ -56,38 +52,6 @@ public class Repository {
         this.home = home;
     }
 
-//    public int getPackagesCount() {
-//        return packagesCount;
-//    }
-//
-//    public void setPackagesCount(int packagesCount) {
-//        this.packagesCount = packagesCount;
-//    }
-//
-//    public int getDownloadedCount() {
-//        return downloadedCount;
-//    }
-//
-//    public void setDownloadedCount(int downloadedCount) {
-//        this.downloadedCount = downloadedCount;
-//    }
-//
-//    public long getSize() {
-//        return size;
-//    }
-//
-//    public void setSize(long size) {
-//        this.size = size;
-//    }
-//
-//    public long getDownloadedSize() {
-//        return downloadedSize;
-//    }
-//
-//    public void setDownloadedSize(long downloadedSize) {
-//        this.downloadedSize = downloadedSize;
-//    }
-
     public List<Architecture> getArchitectures() {
         return architectures;
     }
@@ -104,15 +68,19 @@ public class Repository {
         this.sources = sources;
     }
 
+    public Settings getSettings() {
+        return settings;
+    }
+
+    public void setSettings(Settings settings) {
+        this.settings = settings;
+    }    
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Repository{");
         sb.append("name='").append(name).append('\'');
         sb.append(", home='").append(home).append('\'');
-//        sb.append(", packagesCount=").append(packagesCount);
-//        sb.append(", downloadedCount=").append(downloadedCount);
-//        sb.append(", size=").append(size);
-//        sb.append(", downloadedSize=").append(downloadedSize);
         sb.append(", architectures=").append(architectures);
         sb.append(", sources=").append(sources);
         sb.append('}');
