@@ -293,20 +293,6 @@ public final class DownloadScheduler {
         }
     }
 
-//    class CancelTask extends Task<Void> {
-//
-//        @Override
-//        protected Void call() throws Exception {
-//            try {
-//                updateTitle("Cancelling in progress downloads....");
-//
-//            } catch (Exception e) {
-//                LOG.error(e.getMessage(), e);
-//            }
-//
-//            return null;
-//        }
-//    }
     class DownloadTask extends Task<Void> implements Observer {
 
         private final DownloadModel download;

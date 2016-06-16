@@ -21,6 +21,7 @@ public class SourceModel {
     private final StringProperty components = new SimpleStringProperty();
 
     public SourceModel() {
+        //default constructor
     }
 
     public SourceModel(boolean enabled, String uri, String distribution, String components) {

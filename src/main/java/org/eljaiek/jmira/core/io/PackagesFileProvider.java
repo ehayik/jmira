@@ -7,6 +7,7 @@ import java.util.Optional;
  *
  * @author eduardo.eljaiek
  */
+@FunctionalInterface
 public interface PackagesFileProvider {
 
     Optional<File> getFile();

@@ -40,7 +40,7 @@ final class SourcesDownloadManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(SourcesDownloadManager.class);
 
-    private ExecutorService POOL;
+    private ExecutorService pool;
 
     private final DownloadBuilderFactory factory;
 
@@ -55,18 +55,13 @@ final class SourcesDownloadManager {
 
             if (src.isEnabled()) {
                 try {
-
-                    if (POOL != null) {
-                        POOL.shutdownNow();
-                    }
-
-                    POOL = Executors.newWorkStealingPool();
+                    resetThreadsPool();
                     SourceFiles sf = download(repository, src);
                     result.add(sf);
-                    POOL.shutdown();
-                    POOL.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                    pool.shutdown();
+                    pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException | DownloadFailedException ex) {
-                    POOL.shutdownNow();
+                    pool.shutdownNow();
                     LOG.error(ex.getMessage(), ex);
                     throw new DownloadFailedException(ex);
                 }
@@ -76,6 +71,14 @@ final class SourcesDownloadManager {
         return result;
     }
 
+    private void resetThreadsPool() {
+        if (pool != null) {
+            pool.shutdownNow();
+        }
+
+        pool = Executors.newWorkStealingPool();
+    }
+
     private SourceFiles download(Repository repository, Source source) {
         final SourceFiles sf = new SourceFiles(source.getUri());
         String[] arr = source.getUri().split(SLASH);
@@ -83,12 +86,12 @@ final class SourcesDownloadManager {
         final File folder = new File(String.join(SLASH, repository.getHome(), arr[arr.length - 1], DISTS_FOLDER, source.getDistribution()));
         folder.mkdirs();
 
-        POOL.submit((Runnable) factory.create()
+        pool.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE))
                 .localFolder(folder.getAbsolutePath())
                 .get());
 
-        POOL.submit((Runnable) factory.create()
+        pool.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remoteFolder, RELEASE_GPG))
                 .localFolder(folder.getAbsolutePath())
                 .get());
@@ -107,17 +110,17 @@ final class SourcesDownloadManager {
         File local = new File(String.join(SLASH, localFolder.getAbsolutePath(), component, arch.getFolder()));
         local.mkdirs();
 
-        POOL.submit((Runnable) factory.create()
+        pool.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remote, RELEASE))
                 .localFolder(local.getAbsolutePath())
                 .get());
 
-        POOL.submit((Runnable) factory.create()
+        pool.submit((Runnable) factory.create()
                 .url(String.join(SLASH, remote, PACKAGES_GZ))
                 .localFolder(local.getAbsolutePath())
                 .get());
 
-        POOL.submit((Runnable) () -> {
+        pool.submit((Runnable) () -> {
 
             try {
                 factory.create()

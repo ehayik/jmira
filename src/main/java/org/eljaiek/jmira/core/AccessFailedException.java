@@ -18,6 +18,7 @@ public class AccessFailedException extends IOException {
      * message.
      */
     public AccessFailedException() {
+        //default constructor
     }
 
     /**

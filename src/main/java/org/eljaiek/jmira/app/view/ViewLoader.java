@@ -9,7 +9,6 @@ import java.lang.reflect.InvocationTargetException;
 import javafx.fxml.FXMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -30,11 +29,11 @@ public final class ViewLoader implements ApplicationContextAware {
     private MessageResolver messages;
 
     public ViewLoader(Map<String, String> resources) {
-       this.resources = resources;
+        this.resources = resources;
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext ac) throws BeansException {
+    public void setApplicationContext(ApplicationContext ac) {
         context = ac;
     }
 
@@ -45,16 +44,9 @@ public final class ViewLoader implements ApplicationContextAware {
     public final Object load(String url, Optional<Map<String, Object>> bindings) {
 
         try {
-            ResourceBundle resourceBundle = null;            
-            
-            try {
-                resourceBundle = ResourceBundle.getBundle(resources.get(url));
-            } catch (NullPointerException ex) {
-                LOG.error(ex.getMessage(), ex);
-            }
-           
+            ResourceBundle resourceBundle = loadResourceBundle(url).get();
             FXMLLoader loader = new FXMLLoader(ViewLoader.class.getResource(url), resourceBundle);
-            loader.setControllerFactory(param -> context.getBean(param));
+            loader.setControllerFactory(context::getBean);
             Object view = loader.load();
 
             if (bindings.isPresent()) {
@@ -67,18 +59,24 @@ public final class ViewLoader implements ApplicationContextAware {
         }
     }
 
+    private Optional<ResourceBundle> loadResourceBundle(String url) {
+        ResourceBundle resourceBundle = null;
+
+        try {
+            resourceBundle = ResourceBundle.getBundle(resources.get(url));
+        } catch (NullPointerException ex) {
+            LOG.error(ex.getMessage(), ex);
+        }
+
+        return Optional.ofNullable(resourceBundle);
+    }
+
     private <T> void bindModel(Map<String, Object> bindings, T controller) {
 
         bindings.forEach((String key, Object value) -> {
-            boolean bonded;  
-            Optional<Field> field = Arrays.asList(controller.getClass().getDeclaredFields())
-                    .stream()
-                    .filter(f -> {
-                        ViewModel vb = f.getAnnotation(ViewModel.class);
-                        return vb != null && vb.value().equals(key);
-                    })
-                    .findFirst();
-            
+            boolean bonded;
+            Optional<Field> field = findField(controller.getClass(), key);
+
             if (field.isPresent()) {
                 bindToField(field.get(), controller, value);
                 bonded = true;
@@ -91,6 +89,16 @@ public final class ViewLoader implements ApplicationContextAware {
                         controller.getClass().getCanonicalName(), key));
             }
         });
+    }
+
+    private Optional<Field> findField(Class clazz, String key) {
+        return Arrays.asList(clazz.getDeclaredFields())
+                .stream()
+                .filter(f -> {
+                    ViewModel vb = f.getAnnotation(ViewModel.class);
+                    return vb != null && vb.value().equals(key);
+                })
+                .findFirst();
     }
 
     private static <T> void bindToField(Field field, T controller, Object value) {
@@ -115,7 +123,7 @@ public final class ViewLoader implements ApplicationContextAware {
                 .findFirst();
 
         if (method.isPresent()) {
-            try {    
+            try {
                 method.get().invoke(controller, value);
             } catch (IndexOutOfBoundsException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new ViewLoadException(ex.getMessage(), ex);

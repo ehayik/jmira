@@ -23,16 +23,16 @@ public final class FileSystemHelper {
         DecimalFormat formatter = new DecimalFormat("#.##");
 
         if (bytes > terabyte) {
-            float value = ((float) bytes / (float) terabyte);
+            float value = (float) bytes / (float) terabyte;
             format = formatter.format(value) + " TB";
         } else if (bytes > gigabyte) {
-            float value = ((float) bytes / (float) gigabyte);
+            float value = (float) bytes / (float) gigabyte;
             format = formatter.format(value) + " GB";
         } else if (bytes > megabyte) {
-            float value = ((float) bytes / (float) megabyte);                           
+            float value = (float) bytes / (float) megabyte;                           
             format = formatter.format(value) + " MB";
-        } else if ((bytes > kilobyte)) {
-            float value = ((float) bytes / (float) kilobyte);
+        } else if (bytes > kilobyte) {
+            float value = (float) bytes / (float) kilobyte;
             format = formatter.format(value) + " KB";
         }
 

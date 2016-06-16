@@ -23,80 +23,82 @@ import static org.eljaiek.jmira.core.util.NamesUtils.SETTINGS_JSON;
 import org.eljaiek.jmira.core.scanner.PackageList;
 import org.eljaiek.jmira.core.scanner.PackageScanner;
 import org.eljaiek.jmira.core.scanner.ScannerConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author eljaiek
  */
 @Service
 public final class RepositoryServiceImpl implements RepositoryService {
-
-    private static final LongConsumer DEF_CONSUMER = (long value) -> {
-    };
-
+    
+    private static final Logger LOG = LoggerFactory.getLogger(RepositoryServiceImpl.class);
+    
     private static final String SLASH = "/";
-
+    
     @Autowired
     private ObjectMapper objectMapper;
-
+    
     @Autowired
     private MessageResolver messages;
-
+    
     @Autowired
     private PackageRepository packages;
-
+    
     @Autowired
     private PackageScanner scanner;
-
+    
     private final SourcesDownloadManager sourcesManager;
-
+    
     @Autowired
     public RepositoryServiceImpl(DownloadBuilderFactory factory) {
         sourcesManager = new SourcesDownloadManager(factory);
     }
-
+    
     @Override
     public final void save(Repository repository) throws AccessFailedException {
         Assert.notNull(repository);
-
+        
         try {
             File home = new File(String.join(SLASH, repository.getHome(), SETTINGS_JSON));
-
+            
             if (!home.exists()) {
                 home.createNewFile();
             }
-
+            
             objectMapper.writeValue(home, repository);
         } catch (IOException ex) {
             throw new AccessFailedException(ex.getMessage(), ex);
         }
     }
-
+    
     @Override
     public final Repository open(String home) throws AccessFailedException {
-
+        
         try {
             File homeFile = new File(String.join(SLASH, home, SETTINGS_JSON));
             Assert.isTrue(homeFile.exists(), messages.getMessage("repository.homeError"));
             Repository repository = objectMapper.readValue(homeFile, Repository.class);
-
+            
             if (!home.equals(repository.getHome())) {
                 repository.setHome(home);
             }
-
+            
             return repository;
         } catch (IOException ex) {
             throw new AccessFailedException(ex.getMessage(), ex);
         }
     }
-
+    
     @Override
     public final Status synchronize(Repository repository, LongConsumer progress) throws SyncFailedException {
         final Status status = new Status();
         Optional<LongConsumer> consumer = Optional.ofNullable(progress);
         Progress.reset(repository.getSources().size());
+        SyncError syncError = new SyncError();
         List<SourcesDownloadManager.SourceFiles> sfs = sourcesManager.download(repository);
         packages.removeAll();
-
+        
         sfs.forEach(sf -> sf.stream().forEach(packagesFile -> {
             try {
                 String localHome = String.join("/", repository.getHome(), sf.getFolderName());
@@ -107,15 +109,21 @@ public final class RepositoryServiceImpl implements RepositoryService {
                 status.addAvailableSize(packageList.getAvailableSize());
                 status.addDownloadsSize(packageList.getDownloadsSize());
                 status.addDownloads(packageList.getDownloads());
-                consumer.orElse(DEF_CONSUMER).accept(Progress.update());
+                consumer.orElse((long value) -> LOG.debug(String.valueOf(value))).accept(Progress.update());           
             } catch (IOException ex) {
-                
+                LOG.error(ex.getMessage(), ex);
+                syncError.cause = Optional.of(ex);
             }
         }));
-
+        
+        if (syncError.cause.isPresent()) {
+            String message = syncError.cause.get().getMessage();            
+            throw new SyncFailedException(message);
+        }
+        
         return status;
     }
-
+    
     @Override
     public Status refresh(Repository repository) {
         Status status = new Status();
@@ -126,20 +134,29 @@ public final class RepositoryServiceImpl implements RepositoryService {
         status.addDownloads(packages.downloads(prefs.isChecksum()));
         return status;
     }
-
+    
     private static final class Progress {
-
+        
         private static int total;
-
+        
         private static int current;
 
+        private Progress() {
+            throw new AssertionError();
+        }     
+        
         private static int update() {
             return (++current * 100) / total;
         }
-
+        
         private static void reset(int total) {
             Progress.total = total;
             Progress.current = 0;
         }
+    }
+    
+    private final class SyncError {
+
+        private Optional<IOException> cause = Optional.empty();        
     }
 }

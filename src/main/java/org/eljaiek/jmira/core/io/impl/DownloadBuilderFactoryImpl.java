@@ -2,7 +2,6 @@ package org.eljaiek.jmira.core.io.impl;
 
 import org.eljaiek.jmira.core.io.DownloadBuilder;
 import org.eljaiek.jmira.core.io.DownloadBuilderFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
@@ -20,7 +19,7 @@ final class DownloadBuilderFactoryImpl implements DownloadBuilderFactory, Applic
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         context = applicationContext;
     }
 }

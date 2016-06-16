@@ -28,8 +28,6 @@ public class RepositoryModel {
     
     private final LongProperty availableSize = new SimpleLongProperty(0);
     
-    private final BooleanProperty checksum = new SimpleBooleanProperty();
-    
     private final ListProperty<Architecture> architectures = new SimpleListProperty<>(FXCollections.emptyObservableList());
     
     private final ListProperty<SourceModel> sources = new SimpleListProperty<>(FXCollections.emptyObservableList());

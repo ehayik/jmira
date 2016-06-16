@@ -132,7 +132,7 @@ public abstract class DownloadAdapter extends Observable implements Download {
         while (getStatus() == DownloadStatus.DOWNLOADING) {
             /* Size buffer according to how much of the
              file is left to download. */
-            byte buffer[];
+            byte[] buffer;
 
             if (getSize() - getDownloaded() > MAX_BUFFER_SIZE) {
                 buffer = new byte[MAX_BUFFER_SIZE];

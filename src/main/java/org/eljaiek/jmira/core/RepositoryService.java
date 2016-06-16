@@ -32,6 +32,7 @@ public interface RepositoryService {
         private long downloadsSize;
 
         public Status() {
+            //default constructor
         }        
         
         public Status(int downloads, int available, int damaged, long availableSize, long downloadsSize) {

@@ -9,10 +9,7 @@ import org.eljaiek.jmira.core.io.DownloadResolver;
 import org.eljaiek.jmira.core.io.DownloadResolverFactory;
 import org.eljaiek.jmira.core.logs.MessageResolver;
 import org.eljaiek.jmira.core.util.UrlUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -23,9 +20,7 @@ import org.springframework.util.Assert;
  */
 @Scope(scopeName = "prototype")
 @Component
-final class DownloadBuilderImpl implements DownloadBuilder, ApplicationContextAware {
-
-    private ApplicationContext context;
+final class DownloadBuilderImpl implements DownloadBuilder {
 
     private String url;
 
@@ -44,12 +39,7 @@ final class DownloadBuilderImpl implements DownloadBuilder, ApplicationContextAw
     public DownloadBuilderImpl() {
         observers = new ArrayList<>();
     }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        context = applicationContext;
-    }
-
+    
     @Override
     public final DownloadBuilder url(String url) {
         Assert.isTrue(UrlUtils.isValid(url));
@@ -79,7 +69,7 @@ final class DownloadBuilderImpl implements DownloadBuilder, ApplicationContextAw
     public Download get() {
         Assert.notNull(url);
         Assert.hasText(localFolder);
-        String scheme = url.substring(0, url.indexOf(":"));
+        String scheme = url.substring(0, url.indexOf(':'));
         DownloadResolver resolver = resolverFactory.create(scheme);
         Download download = resolver.resolve(localFolder, url, checksum);
         observers.forEach(download::register);

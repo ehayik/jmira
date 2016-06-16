@@ -12,6 +12,7 @@ public class DataAccessException extends RuntimeException {
      * message.
      */
     public DataAccessException() {
+        //default constructor
     }
 
     /**

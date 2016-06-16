@@ -12,6 +12,7 @@ public class DownloadFailedException extends RuntimeException {
      * message.
      */
     public DownloadFailedException() {
+        //default constructor
     }
 
     /**

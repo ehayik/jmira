@@ -12,6 +12,7 @@ public class ViewLoadException extends RuntimeException {
      * message.
      */
     public ViewLoadException() {
+        //default constructor
     }
 
     /**

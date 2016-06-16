@@ -10,7 +10,7 @@ import org.eljaiek.jmira.core.model.Settings;
  *
  * @author eljaiek
  */
-public class SettingsModel implements Cloneable {
+public class SettingsModel {
 
     private final BooleanProperty checksum;
 
@@ -61,10 +61,5 @@ public class SettingsModel implements Cloneable {
 
     public static SettingsModel create(Settings settings) {
         return new SettingsModel(settings.isChecksum(), settings.getDownloadThreads());
-    }
-
-    @Override
-    protected Object clone() throws CloneNotSupportedException {
-        return super.clone(); //To change body of generated methods, choose Tools | Templates.
     }
 }
