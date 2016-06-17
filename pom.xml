@@ -92,11 +92,6 @@
             <artifactId>commons-lang</artifactId>
             <version>${lang.version}</version>
         </dependency>
-<!--        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>org.reactfx</groupId>
             <artifactId>reactfx</artifactId>
@@ -106,6 +101,11 @@
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
             <version>0.6.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jool</artifactId>
+            <version>0.9.11</version>
         </dependency>
     </dependencies>
     <build>

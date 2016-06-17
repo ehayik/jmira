@@ -140,12 +140,12 @@ final class SourcesDownloadManager {
 
     class SourceFiles {
 
-        private final String url;
+        private final String remoteHome;
 
         private final Queue<String> files;
 
-        SourceFiles(String url) {
-            this.url = url;
+        SourceFiles(String remoteHome) {
+            this.remoteHome = remoteHome;
             files = new ConcurrentLinkedQueue<>();
         }
 
@@ -157,12 +157,12 @@ final class SourcesDownloadManager {
             return files.stream();
         }
 
-        String getUrl() {
-            return url;
+        String getRemoteHome() {
+            return remoteHome;
         }
 
         String getFolderName() {
-            String[] arr = url.split(SLASH);
+            String[] arr = remoteHome.split(SLASH);
             return arr[arr.length - 1];
         }
     }
