@@ -14,6 +14,7 @@ public class InvalidPackagesFileException extends IOException {
      * detail message.
      */
     public InvalidPackagesFileException() {
+        //default constructor
     }
 
     /**

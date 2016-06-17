@@ -1,7 +1,5 @@
 package org.eljaiek.jmira.core.model;
 
-import org.eljaiek.jmira.core.logs.MessageResolver;
-
 /**
  *
  * @author eduardo.eljaiek
@@ -11,9 +9,10 @@ public final class SourceBuilder {
     private final Source source = new Source();
 
     private SourceBuilder() {
+        throw new AssertionError();
     }
 
-    public static final SourceBuilder create() {
+    public static SourceBuilder create() {
         return new SourceBuilder();
     }
 
@@ -26,13 +25,13 @@ public final class SourceBuilder {
         return this;
     }
 
-    public SourceBuilder aptLine(String aptLine) {
+    public SourceBuilder aptLine(String aptLine) throws IllegalAptLineException {
 
         try {
             String[] arr = aptLine.trim().split(" ");
 
             if (arr.length <= 1) {
-                throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("aptLine.error"));
+                throw new IllegalAptLineException();
             }
 
             source.setUri(arr[0]);
@@ -46,7 +45,7 @@ public final class SourceBuilder {
             source.setComponents(builder.toString().trim());
             return this;
         } catch (Exception ex) {
-            throw new IllegalArgumentException(MessageResolver.getDefault().getMessage("aptLine.error"), ex);
+            throw new IllegalAptLineException(ex);
         }
     }
 }

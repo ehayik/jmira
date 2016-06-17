@@ -13,10 +13,6 @@ public final class MessageResolver {
 
     public MessageResolver(ResourceBundleMessageSource messageSource) {
         this.messageSource = messageSource;
-
-        if (MessageResolverHolder.DEFAULT == null) {
-            MessageResolverHolder.DEFAULT = MessageResolver.this;
-        }
     }
 
     public String getMessage(String code, Object... args) {
@@ -25,14 +21,5 @@ public final class MessageResolver {
 
     public String getMessage(String code) {
         return getMessage(code, new Object[]{});
-    }
-
-    public static MessageResolver getDefault() {
-        return MessageResolverHolder.DEFAULT;
-    }
-
-    private static class MessageResolverHolder {
-
-        private static MessageResolver DEFAULT = null;
     }
 }

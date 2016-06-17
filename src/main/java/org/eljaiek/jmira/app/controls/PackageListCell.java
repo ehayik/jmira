@@ -15,10 +15,10 @@ import org.eljaiek.jmira.core.logs.MessageResolver;
  *
  * @author eljaiek
  */
-public final class PackageListCell extends ListCell<PackageModel> { 
-    
+public final class PackageListCell extends ListCell<PackageModel> {
+
     private static final String DOWN_IMAGE_URL = "/org/eljaiek/jmira/app/view/resources/icons/downloadedPackage32.png";
-      
+
     private static final String FXML_URL = "/org/eljaiek/jmira/app/view/PackageListCell.fxml";
 
     @FXML
@@ -30,7 +30,10 @@ public final class PackageListCell extends ListCell<PackageModel> {
     @FXML
     private ImageView imageView;
 
-    public PackageListCell() {
+    private final MessageResolver messages;
+
+    public PackageListCell(MessageResolver messages) {
+        this.messages = messages;
         FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_URL));
         loader.setController(PackageListCell.this);
 
@@ -45,19 +48,18 @@ public final class PackageListCell extends ListCell<PackageModel> {
     @Override
     protected void updateItem(PackageModel item, boolean empty) {
         super.updateItem(item, empty);
-        
-        
+
         if (empty || item == null) {
             return;
         }
-        
+
         if (PackageModel.Status.DOWNLOADED == item.getStatus()) {
             imageView.setImage(new Image(DOWN_IMAGE_URL));
-        }        
+        }
 
         nameLabel.setText(item.getName());
-        String size = MessageResolver.getDefault()
-                .getMessage("packageListCell.sizeLabel.text", FileSystemHelper.formatSize(item.getSize()));
+        String size = messages.getMessage("packageListCell.sizeLabel.text",
+                FileSystemHelper.formatSize(item.getSize()));
         sizeLabel.setText(size);
     }
 }

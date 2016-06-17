@@ -7,9 +7,9 @@ package org.eljaiek.jmira.core.util;
  */
 public final class DebianNamesUtils {
     
-    public final static String DISTS_FOLDER = "dists";
+    public static final String DISTS_FOLDER = "dists";
     
-    public final static String POOL_FOLDER = "pool";
+    public static final String POOL_FOLDER = "pool";
     
     public static final String RELEASE = "Release";
     

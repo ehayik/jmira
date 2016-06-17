@@ -187,9 +187,8 @@ public class HomeController implements Initializable, CloseRequestHandler, Packa
     @Override
     public void initialize(URL url, ResourceBundle rb) {        
         listViewPane.getChildren().remove(pagination);
-
         packagesListView.setPlaceholder(new Label("No Content In List"));
-        packagesListView.setCellFactory((ListView<PackageModel> param) -> new PackageListCell());
+        packagesListView.setCellFactory((ListView<PackageModel> param) -> new PackageListCell(messages));
 
         pagination.currentPageIndexProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             paginationHelper.setPage(newValue.intValue());

@@ -38,8 +38,8 @@ public final class PackageScannerImpl implements PackageScanner {
     @Autowired
     public PackageScannerImpl(PackageValidatorFactory validatorFactory) {
         this.validatorFactory = validatorFactory;
-    }    
-    
+    }
+
     private static DebPackage next(Scanner scanner) {
         DebPackage pkg = new DebPackage();
         String line = scanner.nextLine();
@@ -48,36 +48,31 @@ public final class PackageScannerImpl implements PackageScanner {
 
             switch (line.split(":")[0]) {
 
-                case PACKAGE_TAG: {
+                case PACKAGE_TAG:
                     pkg.setName(line.split(": ")[1]);
-                }
-                break;
+                    break;
 
-                case SIZE_TAG: {
-                    long size = Long.parseLong(line.split(": ")[1]);
-                    pkg.setLength(size);
-                }
-                break;
+                case SIZE_TAG:
+                    pkg.setLength(Long.parseLong(line.split(": ")[1]));
+                    break;
 
-                case FILENAME_TAG: {
+                case FILENAME_TAG:
                     pkg.setRelativeUrl(line.split(": ")[1]);
-                }
-                break;
+                    break;
 
-                case VERSION_TAG: {
+                case VERSION_TAG:
                     pkg.setVersion(line.split(": ")[1]);
-                }
-                break;
+                    break;
 
-                case DESCRIPTION_TAG: {
+                case DESCRIPTION_TAG:
                     pkg.setDescription(line.split(": ")[1]);
-                }
-                break;
+                    break;
 
-                case CHECKSUM_TAG: {
+                case CHECKSUM_TAG:
                     pkg.setChecksum(line.split(": ")[1]);
-                }
-                break;
+                    break;
+                    
+                default:
             }
 
             try {
@@ -121,11 +116,11 @@ public final class PackageScannerImpl implements PackageScanner {
                 availableSize += pkg.getLength();
                 packages.add(pkg);
             }
-            
-             return new PackageList(packages, downloads, availableSize, downloadsSize);
-            
+
+            return new PackageList(packages, downloads, availableSize, downloadsSize);
+
         } catch (IOException ex) {
             throw new InvalidPackagesFileException(ex);
-        }       
-    }  
+        }
+    }
 }

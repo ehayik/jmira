@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Function;
+import org.eljaiek.jmira.core.model.IllegalAptLineException;
 
 import static org.eljaiek.jmira.core.util.NamesUtils.SETTINGS_JSON;
 import org.slf4j.Logger;
@@ -182,9 +183,10 @@ public class EditRepositoryController implements Initializable {
                         .get();
                 SourceModel sourceModel = SourceModel.create(source);
                 sourcesListView.getItems().add(sourceModel);
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalAptLineException ex) {
                 LOG.error(ex.getMessage(), ex);
-                AlertHelper.error(window, messages.getMessage("newSourceDialog.error"), ex.getMessage());
+                String errorMsg = messages.getMessage("aptLine.error");
+                AlertHelper.error(window, messages.getMessage("newSourceDialog.error"), errorMsg);
             }
         }
     }

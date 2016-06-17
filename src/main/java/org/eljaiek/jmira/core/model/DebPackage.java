@@ -27,17 +27,15 @@ public class DebPackage implements Serializable {
     private String checksum;
 
     public DebPackage() {
+        //default constructor
     }
 
-    public DebPackage(String name, String version, String description, String relativeUrl, long length, String localUrl, String remoteUrl, String checksum) {
+    public DebPackage(String name, String version, String description, String relativeUrl, long length) {
         this.name = name;
         this.version = version;
         this.description = description;
         this.relativeUrl = relativeUrl;
-        this.length = length;
-        this.localUrl = localUrl;
-        this.remoteUrl = remoteUrl;
-        this.checksum = checksum;
+        this.length = length;       
     }    
 
     public String getName() {

@@ -3,7 +3,6 @@ package org.eljaiek.jmira.core.scanner.impl;
 
 import org.eljaiek.jmira.core.scanner.PackageValidator;
 import org.eljaiek.jmira.core.scanner.PackageValidatorFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
@@ -22,7 +21,7 @@ final class PackageValidatorFactoryImpl implements PackageValidatorFactory, Appl
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.context = applicationContext;
     }    
 }

@@ -2,6 +2,7 @@ package org.eljaiek.jmira.core.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.Objects;
 
 /**
  * Created by shidara on 28/08/15.
@@ -9,7 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonSerialize(using = SourceSerializer.class)
 @JsonDeserialize(using = SourceDeserializer.class)
 public class Source {
-    
+
     private boolean enabled = true;
 
     private String uri;
@@ -19,6 +20,7 @@ public class Source {
     private String components;
 
     public Source() {
+        //default constructor
     }
 
     public Source(boolean enabled, String uri, String distribution, String components) {
@@ -73,7 +75,8 @@ public class Source {
 
     @Override
     public int hashCode() {
-        int hash = 7;
+        int hash = 3;
+        hash = 79 * hash + Objects.hashCode(getAtpline());
         return hash;
     }
 

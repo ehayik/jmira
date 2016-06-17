@@ -83,6 +83,9 @@ public final class DownloadScheduler {
     @Autowired
     private DownloadBuilderFactory downloadBuilderFactory;
 
+    @Autowired
+    private MessageResolver messages;
+
     public DownloadScheduler() {
         downloadedCount = new SimpleIntegerProperty();
         errors = new SimpleIntegerProperty();
@@ -148,9 +151,8 @@ public final class DownloadScheduler {
         });
 
         searchTask.setOnFailed(evt -> {
-            String msg = MessageResolver.getDefault()
-                    .getMessage("download.process.fail",
-                            searchTask.getException().getMessage());
+            String msg = messages.getMessage("download.process.fail",
+                    searchTask.getException().getMessage());                    
             fireFailEvent(new DownloadFailedException(msg));
         });
 
@@ -168,23 +170,23 @@ public final class DownloadScheduler {
         if (stopDownloads) {
             return;
         }
-        
+
         if (queue.isEmpty()) {
             remainingThreads--;
-            
+
             if (remainingThreads == 0) {
                 fireDoneEvent();
             }
-            
+
             return;
         }
-        
+
         List<DownloadModel> pack = createDownloads(1);
-        
+
         if (!pack.isEmpty()) {
             start(pack.iterator().next());
         }
-    } 
+    }
 
     private void start(Task<Void> task) {
 
@@ -279,11 +281,11 @@ public final class DownloadScheduler {
         protected Void call() throws Exception {
 
             try {
-                updateTitle(MessageResolver.getDefault().getMessage("search.task.title"));
+                updateTitle(messages.getMessage("search.task.title"));
                 queue = new ConcurrentLinkedQueue<>(packageService.listNotDownloaded(settings.isChecksum()));
                 return null;
             } catch (DataAccessException ex) {
-                throw new DownloadFailedException(MessageResolver.getDefault().getMessage("search.process.fail"), ex);
+                throw new DownloadFailedException(messages.getMessage("search.process.fail"), ex);
             }
         }
 
@@ -314,10 +316,8 @@ public final class DownloadScheduler {
                 download.start();
                 return null;
             } catch (DownloadFailedException ex) {
-                LOG.error(MessageResolver
-                        .getDefault()
-                        .getMessage("download.task.fail",
-                                download.getPackageName(), ex.getMessage()));
+                LOG.error(messages.getMessage("download.task.fail",
+                        download.getPackageName(), ex.getMessage()));                             
                 throw ex;
             }
         }
@@ -341,17 +341,16 @@ public final class DownloadScheduler {
                 updateProgress(dn.getDownloaded(), dn.getSize());
                 String formattedProgress = FileSystemHelper.formatSize(download.getDownloaded());
                 String formattedSize = FileSystemHelper.formatSize(download.getSize());
-                updateMessage(MessageResolver.getDefault()
-                        .getMessage("download.task.info", formattedProgress, formattedSize));
+                updateMessage(messages.getMessage("download.task.info", 
+                        formattedProgress, formattedSize));                        
                 return;
             }
 
             if (DownloadStatus.COMPLETE == dn.getStatus()) {
                 downloadedCount.set(downloadedCount.get() + 1);
                 downloaded.set(downloaded.get() + dn.getSize());
-                LOG.info(MessageResolver
-                        .getDefault()
-                        .getMessage("download.task.done", download.getPackageName()));
+                LOG.info(messages.getMessage("download.task.done",
+                        download.getPackageName()));                        
             }
 
             if (DownloadStatus.ERROR == dn.getStatus()) {

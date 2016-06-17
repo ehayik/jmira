@@ -10,7 +10,8 @@ public class Settings {
 
     private int downloadThreads;
 
-    public Settings() {    
+    public Settings() {
+        //default constructor
     }
 
     public Settings(boolean checksum, int downloadThreads) {

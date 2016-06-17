@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.eljaiek.jmira.core.scanner.PackageValidator;
 import org.eljaiek.jmira.core.scanner.PackageValidatorFactory;
+import org.jooq.lambda.Unchecked;
 
 @Repository
 final class FilePackageRepositoryImpl implements PackageRepository {
@@ -43,13 +44,8 @@ final class FilePackageRepositoryImpl implements PackageRepository {
             raf.writeInt(count);
             raf.writeLong(size);
             raf.seek(raf.length());
-            packages.forEach(p -> {
-                try {
-                    save(raf, p);
-                } catch (IOException ex) {
-                    throw new DataAccessException(ex.getMessage(), ex);
-                }
-            });
+            packages.forEach(Unchecked.consumer(p -> save(raf, p),
+                    error -> new DataAccessException(error.getMessage(), error)));
 
         } catch (IOException ex) {
             throw new DataAccessException(ex.getMessage(), ex);
@@ -61,7 +57,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
@@ -78,7 +74,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
                     raf.skipBytes(length);
                     seeked++;
                 } else {
-                    byte b[] = new byte[length];
+                    byte[] b = new byte[length];
                     raf.read(b);
                     DebPackage pkg = (DebPackage) toObject(b);
                     result.add(pkg);
@@ -139,7 +135,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
 
             while (raf.getFilePointer() != raf.length()) {
                 int length = raf.readInt();
-                byte b[] = new byte[length];
+                byte[] b = new byte[length];
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
@@ -160,7 +156,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
         Assert.isTrue(provider.getFile().isPresent());
 
         if (!provider.getFile().get().exists()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(provider.getFile().get(), "r")) {
@@ -170,7 +166,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
 
             while (raf.getFilePointer() != raf.length()) {
                 int length = raf.readInt();
-                byte b[] = new byte[length];
+                byte[] b = new byte[length];
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
@@ -201,7 +197,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
 
             while (raf.getFilePointer() != raf.length()) {
                 int length = raf.readInt();
-                byte b[] = new byte[length];
+                byte[] b = new byte[length];
                 raf.read(b);
                 DebPackage pkg = (DebPackage) toObject(b);
 
@@ -235,10 +231,7 @@ final class FilePackageRepositoryImpl implements PackageRepository {
         return baos.toByteArray();
     }
 
-    private static Object toObject(byte[] bytes) throws IOException,
-            ClassNotFoundException {
-        Object object = new ObjectInputStream(new ByteArrayInputStream(bytes))
-                .readObject();
-        return object;
+    private static Object toObject(byte[] bytes) throws IOException, ClassNotFoundException {
+        return new ObjectInputStream(new ByteArrayInputStream(bytes)).readObject();
     }
 }
