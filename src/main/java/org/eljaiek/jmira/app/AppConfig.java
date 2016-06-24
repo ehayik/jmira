@@ -57,15 +57,14 @@ class AppConfig {
                 "org/eljaiek/jmira/app/view/resources/editRepository",
                 "org/eljaiek/jmira/app/view/resources/editSource",
                 "org/eljaiek/jmira/app/view/resources/common",
-                "org/eljaiek/jmira/core/impl/resources/core",
-                "org/eljaiek/jmira/core/resources/core",
+                "org/eljaiek/jmira/core/impl/resources/core",          
                 "org/eljaiek/jmira/app/view/resources/downloadScheduler");
         source.setFallbackToSystemLocale(false);
         return source;
     }
 
-    @Bean
-    public MessageResolver messageResolver() {
-        return new MessageResolver(bundleMessageSource());
-    }
+//    @Bean
+//    public MessageResolver messageResolver() {
+//        return new MessageResolver(bundleMessageSource());
+//    }
 }
