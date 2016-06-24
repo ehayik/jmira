@@ -4,6 +4,7 @@ import org.eljaiek.jmira.app.model.RepositoryModel;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import org.eljaiek.jmira.core.RepositoryService;
+import org.eljaiek.jmira.core.SyncFailedException;
 import org.eljaiek.jmira.core.model.Repository;
 
 
@@ -28,13 +29,18 @@ final class SynchronizeService extends Service {
 
             @Override
             protected Void call() throws Exception {
-                Repository repository = model.getRepository();
-                RepositoryService.Status status = repositories.synchronize(repository, (long value1) -> updateProgress(value1 / 0.01, 1));
-                model.setAvailable(status.getAvailable());
-                model.setDownloads(status.getDownloads());
-                model.setAvailableSize(status.getAvailableSize());
-                model.setDownloadsSize(status.getDownloadsSize());
-                return null;
+                
+                try {
+                    Repository repository = model.getRepository();
+                    RepositoryService.Status status = repositories.synchronize(repository, (long value1) -> updateProgress(value1 / 0.01, 1));
+                    model.setAvailable(status.getAvailable());
+                    model.setDownloads(status.getDownloads());
+                    model.setAvailableSize(status.getAvailableSize());
+                    model.setDownloadsSize(status.getDownloadsSize());
+                    return null;
+                } catch (SyncFailedException ex) {
+                    throw  ex;
+                }               
             }
         };
     }

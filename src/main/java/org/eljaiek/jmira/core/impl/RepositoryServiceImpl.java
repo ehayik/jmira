@@ -15,13 +15,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.LongConsumer;
 import org.eljaiek.jmira.core.AccessFailedException;
+import org.eljaiek.jmira.core.SyncFailedException;
 import org.eljaiek.jmira.core.io.DownloadBuilderFactory;
+import org.eljaiek.jmira.core.io.DownloadFailedException;
 import org.eljaiek.jmira.core.model.Settings;
 
 import static org.eljaiek.jmira.core.util.NamesUtils.SETTINGS_JSON;
 import org.eljaiek.jmira.core.scanner.PackageList;
 import org.eljaiek.jmira.core.scanner.PackageScanner;
-import org.eljaiek.jmira.core.scanner.ScannerConfiguration;
 import org.jooq.lambda.Unchecked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,13 +96,13 @@ public final class RepositoryServiceImpl implements RepositoryService {
         final Status status = new Status();
         Optional<LongConsumer> consumer = Optional.ofNullable(progress);
         Progress.reset(repository.getSources().size());
-        List<SourcesDownloadManager.SourceFiles> sfs = sourcesManager.download(repository);
+        List<SourcesDownloadManager.SourceFiles> sfs = downloadSourcesFiles(repository);
         packages.removeAll();
 
         sfs.forEach(sf -> sf.stream().forEach(Unchecked.consumer(packagesFile -> {
             String localHome = String.join("/", repository.getHome(), sf.getFolderName());
-            ScannerConfiguration config = new ScannerConfiguration(packagesFile, false, localHome, sf.getRemoteHome());
-            PackageList packageList = scanner.scan(config);
+            PackageScanner.Context context = new PackageScanner.Context(packagesFile, false, localHome, sf.getRemoteHome());
+            PackageList packageList = scanner.scan(context);
             packages.saveAll(packageList.getPackages());
             status.addAvailable(packageList.getAvailable());
             status.addAvailableSize(packageList.getAvailableSize());
@@ -109,11 +110,18 @@ public final class RepositoryServiceImpl implements RepositoryService {
             status.addDownloads(packageList.getDownloads());
             consumer.orElse((long value) -> LOG.debug(String.valueOf(value))).accept(Progress.update());
         }, error -> {
-           LOG.error(error.getMessage(), error); 
-           throw new org.eljaiek.jmira.core.SyncFailedException(error.getMessage(), error);
+            throw new SyncFailedException(error.getMessage(), error);
         })));
 
         return status;
+    }
+
+    private List<SourcesDownloadManager.SourceFiles> downloadSourcesFiles(Repository repository) {
+        try {
+            return sourcesManager.download(repository);
+        } catch (DownloadFailedException ex) {
+            throw new SyncFailedException(ex.getMessage(), ex);
+        }
     }
 
     @Override

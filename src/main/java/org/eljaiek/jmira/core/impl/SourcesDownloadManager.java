@@ -27,6 +27,7 @@ import org.eljaiek.jmira.core.model.Architecture;
 import org.eljaiek.jmira.core.model.Repository;
 import org.eljaiek.jmira.core.model.Source;
 import org.itadaki.bzip2.BZip2InputStream;
+import org.jooq.lambda.Unchecked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +106,6 @@ final class SourcesDownloadManager {
     }
 
     private void download(String remoteFolder, File localFolder, String component, Architecture arch, SourceFiles sf) {
-
         String remote = String.join(SLASH, remoteFolder, component, arch.getFolder());
         File local = new File(String.join(SLASH, localFolder.getAbsolutePath(), component, arch.getFolder()));
         local.mkdirs();
@@ -120,22 +120,34 @@ final class SourcesDownloadManager {
                 .localFolder(local.getAbsolutePath())
                 .get());
 
-        pool.submit((Runnable) () -> {
+//        pool.submit((Runnable) () -> {
+//
+//            try {
+//                factory.create()
+//                        .url(String.join(SLASH, remote, PACKAGES_BZ2))
+//                        .localFolder(local.getAbsolutePath())
+//                        .get().start();
+//
+//                File file = Files.createTempFile(UUID.randomUUID().toString(), null).toFile();
+//                InputStream inputStream = new FileInputStream(String.join(SLASH, local.getAbsolutePath(), PACKAGES_BZ2));
+//                IOUtils.copy(new BZip2InputStream(inputStream, false), new FileOutputStream(file));
+//                sf.add(file.getAbsolutePath());
+//            } catch (IOException | DownloadFailedException ex) {
+//                throw new DownloadFailedException(ex.getMessage(), ex);
+//            }
+//        });
 
-            try {
-                factory.create()
-                        .url(String.join(SLASH, remote, PACKAGES_BZ2))
-                        .localFolder(local.getAbsolutePath())
-                        .get().start();
+        pool.submit(Unchecked.runnable(() -> {
+            factory.create()
+                    .url(String.join(SLASH, remote, PACKAGES_BZ2))
+                    .localFolder(local.getAbsolutePath())
+                    .get().start();
 
-                File file = Files.createTempFile(UUID.randomUUID().toString(), null).toFile();
-                InputStream inputStream = new FileInputStream(String.join(SLASH, local.getAbsolutePath(), PACKAGES_BZ2));
-                IOUtils.copy(new BZip2InputStream(inputStream, false), new FileOutputStream(file));
-                sf.add(file.getAbsolutePath());
-            } catch (IOException ex) {
-                throw new DownloadFailedException(ex.getMessage(), ex);
-            }
-        });
+            File file = Files.createTempFile(UUID.randomUUID().toString(), null).toFile();
+            InputStream inputStream = new FileInputStream(String.join(SLASH, local.getAbsolutePath(), PACKAGES_BZ2));
+            IOUtils.copy(new BZip2InputStream(inputStream, false), new FileOutputStream(file));
+            sf.add(file.getAbsolutePath());
+        }));
     }
 
     class SourceFiles {

@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.util.*;
 import org.eljaiek.jmira.core.scanner.PackageList;
 import org.eljaiek.jmira.core.scanner.PackageScanner;
-import org.eljaiek.jmira.core.scanner.InvalidPackagesFileException;
+import org.eljaiek.jmira.core.scanner.InvalidIndexFileException;
 import org.eljaiek.jmira.core.scanner.PackageValidator;
 import org.eljaiek.jmira.core.scanner.PackageValidatorFactory;
-import org.eljaiek.jmira.core.scanner.ScannerConfiguration;
 import org.eljaiek.jmira.core.model.DebPackage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -71,7 +70,7 @@ public final class PackageScannerImpl implements PackageScanner {
                 case CHECKSUM_TAG:
                     pkg.setChecksum(line.split(": ")[1]);
                     break;
-                    
+
                 default:
             }
 
@@ -86,16 +85,16 @@ public final class PackageScannerImpl implements PackageScanner {
     }
 
     @Override
-    public final PackageList scan(ScannerConfiguration configuration) throws InvalidPackagesFileException {
+    public final PackageList scan(Context context) throws InvalidIndexFileException {
         int downloads = 0;
         long availableSize = 0;
         long downloadsSize = 0;
         List<DebPackage> packages = new ArrayList<>();
-        String localHome = configuration.getLocalHome();
-        String remoteHome = configuration.getRemoteHome();
-        PackageValidator validator = validatorFactory.getPackageValidator(configuration.isChecksum());
+        String localHome = context.getLocalHome();
+        String remoteHome = context.getRemoteHome();
+        PackageValidator validator = validatorFactory.getPackageValidator(context.isChecksum());
 
-        try (Scanner scanner = configuration.getScanner()) {
+        try (Scanner scanner = context.getScanner()) {
 
             while (scanner.hasNextLine()) {
                 DebPackage pkg = next(scanner);
@@ -120,7 +119,7 @@ public final class PackageScannerImpl implements PackageScanner {
             return new PackageList(packages, downloads, availableSize, downloadsSize);
 
         } catch (IOException ex) {
-            throw new InvalidPackagesFileException(ex);
+            throw new InvalidIndexFileException(ex);
         }
     }
 }

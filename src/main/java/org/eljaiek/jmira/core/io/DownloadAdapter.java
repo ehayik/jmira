@@ -7,7 +7,6 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Optional;
 import org.eljaiek.jmira.core.util.FileUtils;
 
 /**
@@ -18,7 +17,7 @@ public abstract class DownloadAdapter extends Observable implements Download {
 
     private static final int MAX_BUFFER_SIZE = 8192;
 
-    protected final Optional<String> checksum;
+    protected final String checksum;
 
     private DownloadStatus status = DownloadStatus.DOWNLOADING;
 
@@ -28,12 +27,12 @@ public abstract class DownloadAdapter extends Observable implements Download {
 
     private final String localFolder;
 
-    private URL url;
+    private final URL url;
 
     public DownloadAdapter(String localFolder, URL url, String checksum) {
         this.localFolder = localFolder;
         this.url = url;
-        this.checksum = Optional.ofNullable(checksum);
+        this.checksum = checksum;
     }   
 
     @Override
@@ -55,15 +54,15 @@ public abstract class DownloadAdapter extends Observable implements Download {
         stateChanged();
     }
 
-    @Override
-    public void run() {
-        start();
-    }  
+//    @Override
+//    public void run() {
+//        start();
+//    }  
 
-    @Override
-    public void clean() {
-        new File(getLocalUrl()).delete();
-    }
+//    @Override
+//    public void clean() {
+//        new File(getLocalUrl()).delete();
+//    }
 
     @Override
     public final synchronized DownloadStatus getStatus() {
@@ -97,11 +96,12 @@ public abstract class DownloadAdapter extends Observable implements Download {
         return url;
     }
 
-    protected void setUrl(URL url) {
-        this.url = url;
-    }
+//    protected void setUrl(URL url) {
+//        this.url = url;
+//    }
 
-    protected String getLocalUrl() {
+    @Override
+    public String getLocalUrl() {
         File folder = new File(localFolder);
 
         if (!folder.exists()) {
@@ -170,8 +170,8 @@ public abstract class DownloadAdapter extends Observable implements Download {
     private boolean isFileCorrupted() {
         File file = new File(getLocalUrl());
         
-        if(checksum.isPresent()) {
-            return FileUtils.checkSum(file, checksum.get());
+        if(checksum != null && !checksum.trim().isEmpty()) {
+            return FileUtils.checkSum(file, checksum);
         }
         
         return file.length() == size;

@@ -1,6 +1,7 @@
 
 package org.eljaiek.jmira.core.io;
 
+import java.io.File;
 import java.util.Observer;
 
 /**
@@ -9,11 +10,13 @@ import java.util.Observer;
  */
 public interface Download extends Runnable {
     
-    int getSize();
-    
     float getProgress();
     
+    int getSize();    
+    
     int getDownloaded();
+    
+    String getLocalUrl();
     
     DownloadStatus getStatus();
     
@@ -23,9 +26,16 @@ public interface Download extends Runnable {
     
     void resume();
     
-    void cancel();
-    
-    void clean();
+    void cancel();   
     
     void register(Observer observer);
+    
+    default void clean() {
+        new File(getLocalUrl()).delete();
+    } 
+ 
+    @Override
+    default  void run() {
+        start();
+    }
 }

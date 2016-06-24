@@ -8,8 +8,7 @@ public final class SourceBuilder {
 
     private final Source source = new Source();
 
-    private SourceBuilder() {
-        throw new AssertionError();
+    private SourceBuilder() {    
     }
 
     public static SourceBuilder create() {

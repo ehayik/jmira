@@ -10,9 +10,9 @@ public enum Architecture {
     
     private final String folder;
     
-   private Architecture(String folder) {
+    private Architecture(String folder) {
        this.folder = folder;
-   } 
+    } 
 
     public String getFolder() {
         return folder;
