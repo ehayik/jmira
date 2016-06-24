@@ -3,4 +3,8 @@
 /classes/
 /jmira.iml
 /error.log
+/logs
 
+/jmira-app/target/
+/jmira-core-impl/target/
+/jmira-core/target/
